@@ -98,7 +98,7 @@ const Navbar = ({ onUploadClick }) => {
                             fontSize: isMobile ? '13px' : '15px', color: 'var(--yellow)',
                             letterSpacing: isMobile ? '2px' : '3px', textTransform: 'uppercase',
                         }}>
-                            CAMPUS<span style={{ color: 'var(--white)' }}>CONNECT</span>
+                            COLLEGE<span style={{ color: 'var(--white)' }}>CIRCLE</span>
                         </span>
                     </Link>
 
@@ -412,7 +412,7 @@ const Navbar = ({ onUploadClick }) => {
                                 {user.username}
                             </p>
                             <p style={{ fontSize: '10px', letterSpacing: '2px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase', marginTop: '2px' }}>
-                                CAMPUS MEMBER
+                                COLLEGE MEMBER
                             </p>
                         </div>
                     </div>

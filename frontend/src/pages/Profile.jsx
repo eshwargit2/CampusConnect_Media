@@ -412,7 +412,7 @@ const Profile = () => {
                         </div>
                         <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.3px', marginBottom: '6px' }}>NO POSTS YET</p>
                         <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
-                            {isOwner ? 'START SHARING YOUR CAMPUS MOMENTS' : 'THIS USER HAS NOT POSTED YET'}
+                            {isOwner ? 'START SHARING YOUR COLLEGE MOMENTS' : 'THIS USER HAS NOT POSTED YET'}
                         </p>
                     </div>
                 ) : viewMode === 'grid' ? (

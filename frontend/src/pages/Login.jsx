@@ -52,11 +52,11 @@ const Login = () => {
                             <div>
                                 <div style={{ fontSize: '10px', letterSpacing: '3px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase', marginBottom: '2px' }}>EST. 2024 — SIGN IN</div>
                                 <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '22px', fontWeight: '700', color: 'var(--yellow)', letterSpacing: '-0.5px', textTransform: 'uppercase' }}>
-                                    CAMPUS<span style={{ color: 'var(--white)' }}>CONNECT</span>
+                                    COLLEGE<span style={{ color: 'var(--white)' }}>CIRCLE</span>
                                 </h1>
                             </div>
                         </div>
-                        <p style={{ fontSize: '10px', letterSpacing: '2px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase' }}>YOUR CAMPUS SOCIAL NETWORK</p>
+                        <p style={{ fontSize: '10px', letterSpacing: '2px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase' }}>YOUR COLLEGE SOCIAL NETWORK</p>
                     </div>
 
                     {/* Form block */}

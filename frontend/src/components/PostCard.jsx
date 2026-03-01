@@ -99,7 +99,7 @@ const PostCard = ({ post, onDelete }) => {
                             {postUser.username}
                         </p>
                         <p style={{ fontSize: '9px', letterSpacing: '2px', color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>
-                            CAMPUS MEMBER
+                            COLLEGE MEMBER
                         </p>
                     </div>
                 </Link>

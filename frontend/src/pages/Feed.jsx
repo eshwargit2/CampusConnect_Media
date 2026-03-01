@@ -73,7 +73,7 @@ const Feed = ({ newPost }) => {
                         color: 'var(--white)', letterSpacing: '-1px', textTransform: 'uppercase',
                         lineHeight: '1',
                     }}>
-                        CAMPUS<span style={{ color: 'var(--yellow)' }}>FEED</span>
+                        COLLEGE<span style={{ color: 'var(--yellow)' }}>FEED</span>
                     </h1>
                 </div>
                 <button onClick={() => fetchPosts(1, true)} className="btn-brand"
@@ -86,7 +86,7 @@ const Feed = ({ newPost }) => {
             {/* Ticker */}
             <div className="ticker-bar" style={{ border: 'var(--border-thick)', marginBottom: '32px', boxShadow: '4px 4px 0 var(--black)' }}>
                 <div className="ticker-track">
-                    {['LATEST POSTS', 'CAMPUS NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS', 'LATEST POSTS', 'CAMPUS NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS'].map((t, i) => (
+                    {['LATEST POSTS', 'COLLEGE NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS', 'LATEST POSTS', 'COLLEGE NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS'].map((t, i) => (
                         <span key={i} className="ticker-item">{t}</span>
                     ))}
                 </div>

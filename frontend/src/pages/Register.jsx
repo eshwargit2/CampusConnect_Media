@@ -58,7 +58,7 @@ const Register = () => {
                                     <GraduationCap size={20} color="var(--black)" />
                                 </div>
                                 <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: isMobile ? '16px' : '18px', fontWeight: '700', color: 'var(--yellow)', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                                    JOIN CAMPUS<span style={{ color: 'var(--white)' }}>CONNECT</span>
+                                    JOIN COLLEGE<span style={{ color: 'var(--white)' }}>CIRCLE</span>
                                 </h1>
                             </div>
                             <div style={{ fontSize: '9px', letterSpacing: '2px', color: 'var(--red)', fontWeight: '700', textTransform: 'uppercase', textAlign: 'right', lineHeight: '1.5', flexShrink: 0 }}>
