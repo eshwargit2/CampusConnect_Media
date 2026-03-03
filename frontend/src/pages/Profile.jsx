@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { OnlineDot } from '../context/OnlineContext';
 import useIsMobile from '../hooks/useIsMobile';
 import PostCard from '../components/PostCard';
+import ConfirmModal from '../components/ConfirmModal';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 
@@ -34,6 +35,8 @@ const Profile = () => {
     const [followModal, setFollowModal] = useState(null); // 'followers' | 'following' | null
     const [followList, setFollowList] = useState([]);
     const [followListLoading, setFollowListLoading] = useState(false);
+    const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+    const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
 
     useEffect(() => { fetchProfile(); }, [username]);
 
@@ -101,6 +104,21 @@ const Profile = () => {
             setProfileData(prev => ({ ...prev, followers_count: data.following ? prev.followers_count + 1 : prev.followers_count - 1 }));
         } catch { toast.error('FAILED'); }
         finally { setFollowLoading(false); }
+    };
+
+    const handleDeleteAccount = async () => {
+        setDeleteAccountLoading(true);
+        try {
+            await api.delete('/users/account');
+            toast.success('ACCOUNT DELETED');
+            // Logout and redirect
+            localStorage.removeItem('token');
+            updateUser(null);
+            navigate('/login');
+        } catch (err) {
+            toast.error(err.response?.data?.error?.toUpperCase() || 'FAILED TO DELETE ACCOUNT');
+            setDeleteAccountLoading(false);
+        }
     };
 
     const handleDeletePost = (postId) => {
@@ -275,6 +293,59 @@ const Profile = () => {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                            
+                            {/* Delete Account Section */}
+                            <div style={{ 
+                                borderTop: '3px solid var(--red)', 
+                                paddingTop: '16px', 
+                                marginTop: '20px' 
+                            }}>
+                                <label className="field-label" style={{ color: 'var(--red)', marginBottom: '8px' }}>
+                                    ⚠ DANGER ZONE
+                                </label>
+                                <p style={{ 
+                                    fontSize: '11px', 
+                                    color: 'rgba(10,10,10,0.6)', 
+                                    marginBottom: '12px',
+                                    lineHeight: '1.6'
+                                }}>
+                                    Once you delete your account, there is no going back. All your posts, comments, and profile data will be permanently deleted.
+                                </p>
+                                <button 
+                                    onClick={() => setShowDeleteAccountModal(true)} 
+                                    style={{
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        width: '100%',
+                                        padding: '12px 20px',
+                                        background: 'var(--white)',
+                                        border: '3px solid var(--red)',
+                                        color: 'var(--red)',
+                                        cursor: 'pointer',
+                                        fontFamily: "'Space Mono', monospace",
+                                        fontSize: '11px',
+                                        fontWeight: '700',
+                                        letterSpacing: '2px',
+                                        textTransform: 'uppercase',
+                                        transition: 'all 0.15s',
+                                        boxShadow: '3px 3px 0 var(--red)',
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.background = 'var(--red)';
+                                        e.currentTarget.style.color = 'var(--white)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.background = 'var(--white)';
+                                        e.currentTarget.style.color = 'var(--red)';
+                                    }}
+                                    disabled={deleteAccountLoading}
+                                >
+                                    {deleteAccountLoading ? <Loader2 size={13} className="animate-spin" /> : <AlertCircle size={13} />}
+                                    DELETE ACCOUNT
+                                </button>
                             </div>
                         </div>
                     ) : (
@@ -574,6 +645,18 @@ const Profile = () => {
                     </div>
                 </div>
             )}
+            
+            {/* Delete Account Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteAccountModal}
+                onClose={() => setShowDeleteAccountModal(false)}
+                onConfirm={handleDeleteAccount}
+                title="DELETE ACCOUNT"
+                message="Are you absolutely sure you want to delete your account? This will permanently delete all your posts, comments, messages, and profile data. This action cannot be undone."
+                confirmText="DELETE ACCOUNT"
+                cancelText="CANCEL"
+                isDangerous={true}
+            />
         </div>
     );
 };

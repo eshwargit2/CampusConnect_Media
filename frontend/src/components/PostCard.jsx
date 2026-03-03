@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Trash2, Send, MoreHorizontal, X } from 'lucide-re
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot } from '../context/OnlineContext';
+import ConfirmModal from './ConfirmModal';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 
@@ -19,6 +20,7 @@ const PostCard = ({ post, onDelete }) => {
     const [commentLoading, setCommentLoading] = useState(false);
     const [loadingComments, setLoadingComments] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const commentInputRef = useRef(null);
     const postUser = post.user || {};
     const isOwner = user?.id === postUser.id;
@@ -62,7 +64,6 @@ const PostCard = ({ post, onDelete }) => {
     };
 
     const handleDelete = async () => {
-        if (!window.confirm('DELETE THIS POST?')) return;
         try { await api.delete(`/posts/${post.id}`); toast.success('POST DELETED'); onDelete(post.id); }
         catch { toast.error('FAILED TO DELETE'); }
         setShowMenu(false);
@@ -123,7 +124,7 @@ const PostCard = ({ post, onDelete }) => {
                                 background: 'var(--white)', border: '3px solid var(--black)',
                                 boxShadow: 'var(--shadow)', zIndex: 10, minWidth: '160px',
                             }}>
-                                <button onClick={handleDelete} style={{
+                                <button onClick={() => { setShowDeleteModal(true); setShowMenu(false); }} style={{
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                     padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer',
                                     width: '100%', textAlign: 'left', fontSize: '11px', fontWeight: '700',
@@ -235,6 +236,18 @@ const PostCard = ({ post, onDelete }) => {
                     )}
                 </div>
             )}
+            
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDelete}
+                title="DELETE POST"
+                message="Are you sure you want to delete this post? This action cannot be undone."
+                confirmText="DELETE"
+                cancelText="CANCEL"
+                isDangerous={true}
+            />
         </article>
     );
 };

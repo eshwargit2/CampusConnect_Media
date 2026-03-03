@@ -311,4 +311,81 @@ router.post('/online-status', async (req, res) => {
     res.json({ online });
 });
 
+// DELETE /api/users/account — Delete user account
+router.delete('/account', authMiddleware, async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        // Delete user's likes on posts
+        await supabase.from('likes').delete().eq('user_id', userId);
+
+        // Delete user's comments on posts
+        await supabase.from('comments').delete().eq('user_id', userId);
+
+        // Delete comments and likes on user's posts
+        const { data: userPosts } = await supabase
+            .from('posts')
+            .select('id')
+            .eq('user_id', userId);
+
+        if (userPosts && userPosts.length > 0) {
+            const postIds = userPosts.map(p => p.id);
+            await supabase.from('likes').delete().in('post_id', postIds);
+            await supabase.from('comments').delete().in('post_id', postIds);
+        }
+
+        // Delete user's posts
+        await supabase.from('posts').delete().eq('user_id', userId);
+
+        // Delete user's story likes (likes given by user)
+        await supabase.from('story_likes').delete().eq('user_id', userId);
+
+        // Delete likes, views, and replies on user's stories
+        const { data: userStories } = await supabase
+            .from('stories')
+            .select('id')
+            .eq('user_id', userId);
+
+        if (userStories && userStories.length > 0) {
+            const storyIds = userStories.map(s => s.id);
+            await supabase.from('story_likes').delete().in('story_id', storyIds);
+            await supabase.from('story_views').delete().in('story_id', storyIds);
+            await supabase.from('story_replies').delete().in('story_id', storyIds);
+        }
+
+        // Delete user's stories
+        await supabase.from('stories').delete().eq('user_id', userId);
+
+        // Delete story views by user (viewing others' stories)
+        await supabase.from('story_views').delete().eq('viewer_id', userId);
+
+        // Delete story replies by user (replying to others' stories)
+        await supabase.from('story_replies').delete().eq('sender_id', userId);
+
+        // Delete user's follows (both as follower and following)
+        await supabase.from('follows').delete().eq('follower_id', userId);
+        await supabase.from('follows').delete().eq('following_id', userId);
+
+        // Delete user's messages
+        await supabase.from('messages').delete().eq('sender_id', userId);
+        await supabase.from('messages').delete().eq('receiver_id', userId);
+
+        // Finally, delete the user account
+        const { error } = await supabase.from('users').delete().eq('id', userId);
+
+        if (error) {
+            console.error('Delete account error:', error);
+            return res.status(500).json({ error: 'Failed to delete account' });
+        }
+
+        // Remove from online users
+        onlineUsers.delete(userId);
+
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ error: 'Failed to delete account' });
+    }
+});
+
 module.exports = router;
