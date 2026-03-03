@@ -145,7 +145,7 @@ router.post('/forgot-password', async (req, res) => {
     const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email: normalizedEmail,
-        options: { redirectTo: `${FRONTEND_URL}/reset-password` },
+        options: { redirectTo: 'https://collegecircle.app/reset-password' },
     });
 
     if (linkErr || !linkData?.properties?.action_link) {
