@@ -19,6 +19,27 @@ const ResetPassword = () => {
     useEffect(() => {
         const extractToken = async () => {
             try {
+                // Check for errors in URL hash first (Supabase error redirects)
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    const hashParams = new URLSearchParams(hash);
+                    const errorParam = hashParams.get('error');
+                    const errorCode = hashParams.get('error_code');
+                    const errorDesc = hashParams.get('error_description');
+                    
+                    if (errorParam || errorCode) {
+                        let errorMsg = 'Invalid or expired reset link.';
+                        if (errorCode === 'otp_expired') {
+                            errorMsg = 'This reset link has expired. Please request a new one.';
+                        } else if (errorDesc) {
+                            errorMsg = decodeURIComponent(errorDesc.replace(/\+/g, ' '));
+                        }
+                        setError(errorMsg);
+                        setTokenLoading(false);
+                        return;
+                    }
+                }
+
                 // Method 1: PKCE flow → ?code=xxx in query params (Supabase default now)
                 const searchParams = new URLSearchParams(window.location.search);
                 const code = searchParams.get('code');
@@ -34,7 +55,6 @@ const ResetPassword = () => {
                 }
 
                 // Method 2: Implicit flow → #access_token=xxx in URL hash (older Supabase)
-                const hash = window.location.hash.substring(1);
                 if (hash) {
                     const hashParams = new URLSearchParams(hash);
                     const token = hashParams.get('access_token');
