@@ -98,7 +98,7 @@ router.get('/me', async (req, res) => {
     }
 });
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://collegecircle.app';
 const nodemailer = require('nodemailer');
 
 // Configure SMTP transporter (Brevo / Sendinblue)
