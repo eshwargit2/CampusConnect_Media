@@ -1,6 +1,7 @@
 require('dotenv').config();
 require('express-async-errors');
 
+//tested
 const express = require('express');
 const cors = require('cors');
 
@@ -59,3 +60,5 @@ app.listen(PORT, () => {
     console.log(`🚀 CampusConnect server running on http://localhost:${PORT}`);
     console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
+
+
