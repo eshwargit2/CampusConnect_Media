@@ -98,7 +98,7 @@ router.get('/me', async (req, res) => {
     }
 });
 
-const FRONTEND_URL = 'https://collegecircle.app';
+const FRONTEND_URL = 'https://www.collegecircle.app';
 const nodemailer = require('nodemailer');
 
 // Configure SMTP transporter (Brevo / Sendinblue)
@@ -145,7 +145,7 @@ router.post('/forgot-password', async (req, res) => {
     const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email: normalizedEmail,
-        options: { redirectTo: 'https://collegecircle.app/reset-password' },
+        options: { redirectTo: 'https://www.collegecircle.app/reset-password' },
     });
 
     if (linkErr || !linkData?.properties?.action_link) {
