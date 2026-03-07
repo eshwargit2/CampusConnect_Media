@@ -45,9 +45,13 @@ export const AuthProvider = ({ children }) => {
 
     const register = useCallback(async (email, username, password, bio) => {
         const { data } = await api.post('/auth/register', { email, username, password, bio });
-        localStorage.setItem('cc_token', data.token);
-        localStorage.setItem('cc_user', JSON.stringify(data.user));
-        setUser(data.user);
+        // Registration now requires email verification — do NOT auto-login
+        // If the server ever returns a token directly (legacy), handle it
+        if (data.token && data.user) {
+            localStorage.setItem('cc_token', data.token);
+            localStorage.setItem('cc_user', JSON.stringify(data.user));
+            setUser(data.user);
+        }
         return data;
     }, []);
 

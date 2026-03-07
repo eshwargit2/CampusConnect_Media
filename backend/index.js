@@ -11,6 +11,7 @@ const postRoutes = require('./routes/posts');
 const userRoutes = require('./routes/users');
 const storyRoutes = require('./routes/stories');
 const messageRoutes = require('./routes/messages');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {
