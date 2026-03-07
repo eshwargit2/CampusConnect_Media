@@ -122,7 +122,7 @@ router.post('/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Insert user (is_verified defaults to false in DB)
+    // Insert user (is_verified defaults to FALSE via DB column default)
     const { data: newUser, error } = await supabase
         .from('users')
         .insert({
@@ -131,9 +131,8 @@ router.post('/register', async (req, res) => {
             password_hash: passwordHash,
             bio: bio || '',
             profile_image: null,
-            is_verified: false,
         })
-        .select('id, email, username, bio, profile_image, created_at, is_verified')
+        .select('id, email, username, bio, profile_image, created_at')
         .single();
 
     if (error) {
@@ -195,7 +194,7 @@ router.get('/verify-email', async (req, res) => {
         .update({ is_verified: true })
         .eq('id', decoded.userId)
         .eq('email', decoded.email)
-        .select('id, email, username, bio, profile_image, created_at, is_verified')
+        .select('id, email, username, bio, profile_image, created_at')
         .single();
 
     if (error || !user) {
@@ -203,16 +202,11 @@ router.get('/verify-email', async (req, res) => {
         return res.status(400).json({ error: 'Could not verify account. It may not exist.' });
     }
 
-    if (!user.is_verified) {
-        return res.status(500).json({ error: 'Verification failed — please try again.' });
-    }
-
     // Return JWT so the user is automatically logged in after verification
     const authToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    const { is_verified, ...safeUser } = user;
 
     console.log(`✅ Email verified for: ${user.email}`);
-    res.json({ message: 'Email verified successfully!', user: safeUser, token: authToken });
+    res.json({ message: 'Email verified successfully!', user, token: authToken });
 });
 
 // ─── RESEND VERIFICATION ──────────────────────────────────────────────────
@@ -232,7 +226,8 @@ router.post('/resend-verification', async (req, res) => {
         return res.json({ message: 'If that email is registered, a new verification link has been sent.' });
     }
 
-    if (user.is_verified) {
+    // If is_verified column doesn't exist yet, user.is_verified will be undefined — treat as unverified for resend
+    if (user.is_verified === true) {
         return res.status(400).json({ error: 'This account is already verified. Please login.' });
     }
 
@@ -277,7 +272,8 @@ router.post('/login', async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    // Block unverified accounts (is_verified can be null for legacy users — treat as verified)
+    // Block unverified accounts
+    // NOTE: is_verified === false (strictly) — null/undefined means column not yet added, allow login
     if (user.is_verified === false) {
         return res.status(403).json({
             error: 'Please verify your email before logging in.',
