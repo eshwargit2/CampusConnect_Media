@@ -14,7 +14,6 @@ import ResetPassword from './pages/ResetPassword';
 import Messages from './pages/Messages';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
-import VerifyEmail from './pages/VerifyEmail';
 
 // Route guard for authenticated routes
 const ProtectedRoute = ({ children }) => {
@@ -96,7 +95,6 @@ const AppContent = () => {
           }
         />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route
           path="/"
           element={

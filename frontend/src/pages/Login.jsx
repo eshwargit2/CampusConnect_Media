@@ -13,24 +13,18 @@ const Login = () => {
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [unverifiedEmail, setUnverifiedEmail] = useState(''); // 403 verification needed
 
     const handleChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); setError(''); };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true); setError(''); setUnverifiedEmail('');
+        setLoading(true); setError('');
         try {
             await login(form.email, form.password);
             toast.success('WELCOME BACK ✦');
             navigate('/');
         } catch (err) {
-            const resp = err.response?.data;
-            if (resp?.requiresVerification) {
-                setUnverifiedEmail(resp.email || form.email);
-            } else {
-                setError(resp?.error || 'LOGIN FAILED. TRY AGAIN.');
-            }
+            setError(err.response?.data?.error || 'LOGIN FAILED. TRY AGAIN.');
         } finally { setLoading(false); }
     };
 
@@ -71,24 +65,6 @@ const Login = () => {
                         border: isMobile ? 'none' : 'var(--border-thick)', borderTop: 'none',
                         boxShadow: isMobile ? 'none' : 'var(--shadow-lg)',
                     }}>
-                        {unverifiedEmail && (
-                            <div style={{
-                                background: '#fffbe6', border: '3px solid var(--yellow)',
-                                padding: '12px 14px', marginBottom: '16px', fontSize: '12px',
-                                lineHeight: '1.7', display: 'flex', flexDirection: 'column', gap: 8,
-                            }}>
-                                <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <span>📧</span> Please verify your email first.
-                                </div>
-                                <span style={{ color: 'rgba(10,10,10,0.6)' }}>Haven't received it?{' '}
-                                    <Link to={`/verify-email`}
-                                        state={{ resendEmail: unverifiedEmail }}
-                                        style={{ color: 'var(--black)', fontWeight: 700, textDecoration: 'underline' }}>
-                                        Resend verification email
-                                    </Link>
-                                </span>
-                            </div>
-                        )}
                         {error && (
                             <div className="error-banner animate-fade-in"><AlertCircle size={16} /> {error}</div>
                         )}

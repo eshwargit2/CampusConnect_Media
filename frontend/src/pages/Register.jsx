@@ -15,7 +15,6 @@ const Register = () => {
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [registered, setRegistered] = useState(false); // show verify-email notice
 
     const handleChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); setError(''); };
     const emailValid = form.email.toLowerCase().endsWith(`@${DOMAIN}`);
@@ -29,14 +28,9 @@ const Register = () => {
         if (form.password.length < 6) { setError('PASSWORD MIN 6 CHARACTERS'); return; }
         setLoading(true); setError('');
         try {
-            const data = await register(form.email, form.username, form.password, form.bio);
-            if (data.requiresVerification) {
-                // Show verify-email notice
-                setRegistered(true);
-            } else {
-                toast.success('ACCOUNT CREATED ✦');
-                navigate('/');
-            }
+            await register(form.email, form.username, form.password, form.bio);
+            toast.success('ACCOUNT CREATED ✦');
+            navigate('/');
         } catch (err) {
             setError(err.response?.data?.error?.toUpperCase() || 'REGISTRATION FAILED');
         } finally { setLoading(false); }
@@ -46,40 +40,7 @@ const Register = () => {
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--white)', overflow: 'hidden' }}>
-            {!isMobile && <div style={{ width: '8px', background: registered ? 'var(--green)' : 'var(--red)', flexShrink: 0, borderRight: '3px solid var(--black)' }} />}
-
-            {/* ── Email Sent Confirmation ── */}
-            {registered && (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '0' : '40px 24px' }}>
-                    <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: '440px' }}>
-                        <div style={{ border: isMobile ? 'none' : 'var(--border-thick)', boxShadow: isMobile ? 'none' : 'var(--shadow-lg)' }}>
-                            <div style={{ background: 'var(--green)', padding: isMobile ? '28px 20px' : '36px', borderBottom: '5px solid var(--black)', textAlign: 'center' }}>
-                                <div style={{ fontSize: '52px', marginBottom: '12px' }}>📧</div>
-                                <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '22px', fontWeight: '700', color: 'var(--black)', textTransform: 'uppercase', letterSpacing: '-0.5px', margin: 0 }}>
-                                    CHECK YOUR EMAIL
-                                </h1>
-                            </div>
-                            <div style={{ background: 'var(--white)', padding: pad, textAlign: 'center' }}>
-                                <p style={{ fontSize: '13px', lineHeight: '1.8', marginBottom: '8px' }}>
-                                    We've sent a verification link to
-                                </p>
-                                <p style={{ fontFamily: "'Space Mono', monospace", fontWeight: '700', fontSize: '13px', letterSpacing: '1px', background: 'var(--black)', color: 'var(--yellow)', padding: '10px 16px', display: 'inline-block', marginBottom: '20px' }}>
-                                    {form.email}
-                                </p>
-                                <p style={{ fontSize: '12px', color: 'rgba(10,10,10,0.5)', lineHeight: '1.7', marginBottom: '24px' }}>
-                                    Click the link in the email to activate your account. Check your <strong>spam folder</strong> if you don't see it. The link expires in <strong>24 hours</strong>.
-                                </p>
-                                <Link to="/login" className="btn-ghost" style={{ display: 'inline-flex', padding: '12px 24px', fontSize: '11px' }}>
-                                    ← BACK TO LOGIN
-                                </Link>
-                            </div>
-                            <div style={{ background: 'var(--green)', padding: '10px 16px', font: "700 10px/1 'Space Mono', monospace", letterSpacing: '3px', display: 'flex', justifyContent: 'space-between' }}>
-                                <span>VERIFY YOUR EMAIL</span><span>✅</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {!isMobile && <div style={{ width: '8px', background: 'var(--red)', flexShrink: 0, borderRight: '3px solid var(--black)' }} />}
 
             <div style={{ flex: 1, display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'center', padding: isMobile ? '0' : '40px 24px', flexDirection: 'column' }}>
                 <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: isMobile ? '100%' : '460px', margin: '0 auto', flex: isMobile ? 1 : 'unset', display: 'flex', flexDirection: 'column' }}>
