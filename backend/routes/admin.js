@@ -164,11 +164,12 @@ router.put('/users/:userId', adminMiddleware, async (req, res) => {
 
     const updates = {};
     if (username !== undefined) {
+        const cleanUsername = username.trim();
         // Check username uniqueness
         const { data: existing } = await supabase
-            .from('users').select('id').eq('username', username).neq('id', userId).single();
-        if (existing) return res.status(409).json({ error: 'Username already taken by another user' });
-        updates.username = username;
+            .from('users').select('id').ilike('username', cleanUsername).neq('id', userId).limit(1);
+        if (existing && existing.length > 0) return res.status(409).json({ error: 'Username already taken by another user' });
+        updates.username = cleanUsername;
     }
     if (email !== undefined) {
         const { data: existingEmail } = await supabase

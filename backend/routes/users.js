@@ -43,11 +43,13 @@ router.get('/search', async (req, res) => {
 router.get('/:username', async (req, res) => {
     const { username } = req.params;
 
-    const { data: user, error } = await supabase
+    const { data, error } = await supabase
         .from('users')
         .select('id, email, username, bio, profile_image, address, website, link_instagram, link_twitter, link_linkedin, link_github, created_at')
-        .eq('username', username)
-        .single();
+        .ilike('username', username)
+        .limit(1);
+
+    const user = data && data.length > 0 ? data[0] : null;
 
     if (error || !user) {
         return res.status(404).json({ error: 'User not found' });
@@ -124,19 +126,20 @@ router.put('/profile/update', authMiddleware, upload.single('profile_image'), as
 
     const updates = {};
 
-    if (username && username !== req.user.username) {
+    if (username && username.trim() !== req.user.username) {
+        const cleanUsername = username.trim();
         // Check username uniqueness
         const { data: existing } = await supabase
             .from('users')
             .select('id')
-            .eq('username', username)
+            .ilike('username', cleanUsername)
             .neq('id', userId)
-            .single();
+            .limit(1);
 
-        if (existing) {
+        if (existing && existing.length > 0) {
             return res.status(409).json({ error: 'Username already taken' });
         }
-        updates.username = username;
+        updates.username = cleanUsername;
     }
 
     if (bio !== undefined) updates.bio = bio;

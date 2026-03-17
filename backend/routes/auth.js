@@ -73,12 +73,13 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
     const normalizedEmail = email.toLowerCase();
+    const cleanUsername = username.trim();
 
     const { data: existingEmail } = await supabase.from('users').select('id').eq('email', normalizedEmail).single();
     if (existingEmail) return res.status(409).json({ error: 'An account with this email already exists' });
 
-    const { data: existingUsername } = await supabase.from('users').select('id').eq('username', username).single();
-    if (existingUsername) return res.status(409).json({ error: 'Username is already taken' });
+    const { data: existingUsername } = await supabase.from('users').select('id').ilike('username', cleanUsername);
+    if (existingUsername && existingUsername.length > 0) return res.status(409).json({ error: 'Username is already taken' });
 
     const passwordHash = await bcrypt.hash(password, 12);
 
@@ -86,7 +87,7 @@ router.post('/register', async (req, res) => {
         .from('users')
         .insert({
             email: normalizedEmail,
-            username,
+            username: cleanUsername,
             password_hash: passwordHash,
             bio: bio || '',
             profile_image: null,
