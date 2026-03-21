@@ -33,13 +33,20 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
     const [liked, setLiked] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
     const [likeAnimating, setLikeAnimating] = useState(false);
+    const [storyImageFit, setStoryImageFit] = useState('cover');
+    const [mediaLoaded, setMediaLoaded] = useState(false);
+    const [mediaVisible, setMediaVisible] = useState(false);
 
     const timerRef = useRef(null);
     const startTimeRef = useRef(null);
     const elapsedRef = useRef(0);
     const replyInputRef = useRef(null);
+    const minLoadDelayDoneRef = useRef(false);
+    const loadDelayTimeoutRef = useRef(null);
+    const mediaLoadedRef = useRef(false);
 
     const STORY_DURATION = 5000;
+    const STORY_MIN_LOAD_MS = 3000;
 
     const currentGroup = storyGroups[groupIdx];
     const currentStory = currentGroup?.stories?.[storyIdx];
@@ -60,12 +67,58 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
         setReplyText('');
         setSentReaction(null);
         setShowReactions(false);
+        setStoryImageFit('cover');
         // Sync like state from story data
         if (currentStory) {
             setLiked(currentStory.liked_by_me || false);
             setLikesCount(currentStory.likes_count || 0);
         }
     }, [currentStory?.id]);
+
+    useEffect(() => {
+        mediaLoadedRef.current = mediaLoaded;
+    }, [mediaLoaded]);
+
+    useEffect(() => {
+        setMediaLoaded(false);
+        setMediaVisible(false);
+        mediaLoadedRef.current = false;
+        minLoadDelayDoneRef.current = false;
+
+        if (loadDelayTimeoutRef.current) {
+            clearTimeout(loadDelayTimeoutRef.current);
+        }
+
+        loadDelayTimeoutRef.current = setTimeout(() => {
+            minLoadDelayDoneRef.current = true;
+            setMediaVisible((currentVisible) => currentVisible || mediaLoadedRef.current);
+        }, STORY_MIN_LOAD_MS);
+
+        return () => {
+            if (loadDelayTimeoutRef.current) {
+                clearTimeout(loadDelayTimeoutRef.current);
+                loadDelayTimeoutRef.current = null;
+            }
+        };
+    }, [currentStory?.id]);
+
+    useEffect(() => {
+        if (mediaLoaded && minLoadDelayDoneRef.current) {
+            setMediaVisible(true);
+        }
+    }, [mediaLoaded]);
+
+    const handleStoryImageLoad = (e) => {
+        const { naturalWidth, naturalHeight } = e.currentTarget;
+        if (!naturalWidth || !naturalHeight) {
+            setMediaLoaded(true);
+            return;
+        }
+
+        const isLandscape = naturalWidth > naturalHeight;
+        setStoryImageFit(isLandscape ? 'contain' : 'cover');
+        setMediaLoaded(true);
+    };
 
     // Lock scroll
     useEffect(() => {
@@ -95,13 +148,13 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
     }, []);
 
     useEffect(() => {
-        if (!paused && !showViewers && !isInputActive) {
+        if (!paused && !showViewers && !isInputActive && mediaVisible) {
             elapsedRef.current = 0;
             setProgress(0);
             startTimer();
         }
         return () => stopTimer();
-    }, [groupIdx, storyIdx, paused, showViewers, isInputActive]);
+    }, [groupIdx, storyIdx, paused, showViewers, isInputActive, mediaVisible]);
 
     // ── Navigation ───────────────────────────────────────────────────
     const goNext = () => {
@@ -341,10 +394,49 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                 </div>
 
                 {/* Story image */}
-                <img src={currentStory.image_url} alt={currentStory.caption || 'Story'}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    draggable={false}
-                />
+                <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
+                    <img
+                        src={currentStory.image_url}
+                        alt={currentStory.caption || 'Story'}
+                        onLoad={handleStoryImageLoad}
+                        onError={() => setMediaLoaded(true)}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: storyImageFit,
+                            objectPosition: 'center',
+                            display: 'block',
+                            opacity: mediaVisible ? 1 : 0,
+                            transition: 'opacity 0.2s ease',
+                        }}
+                        draggable={false}
+                    />
+
+                    {!mediaVisible && (
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '12px',
+                            background: '#000',
+                            zIndex: 2,
+                        }}>
+                            <div className="spinner" style={{ width: '30px', height: '30px', borderTopColor: 'var(--yellow)' }} />
+                            <p style={{
+                                color: 'rgba(255,255,255,0.8)',
+                                fontFamily: "'Space Mono', monospace",
+                                fontSize: '10px',
+                                letterSpacing: '2px',
+                                textTransform: 'uppercase',
+                            }}>
+                                Loading story...
+                            </p>
+                        </div>
+                    )}
+                </div>
 
                 {/* Tap zones (only when not typing) */}
                 {!isInputActive && (

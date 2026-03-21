@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Home, PlusSquare, User, LogOut, GraduationCap, Menu, X, Search, MessageSquare } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import api from '../lib/api';
+import { supabase } from '../lib/supabaseClient';
 
 const Navbar = ({ onUploadClick }) => {
     const { user, logout } = useAuth();
@@ -34,6 +35,56 @@ const Navbar = ({ onUploadClick }) => {
         const interval = setInterval(fetchUnread, 30000);
         return () => clearInterval(interval);
     }, [user]);
+
+    // Real-time Browser Notifications
+    useEffect(() => {
+        if (!user) return;
+        
+        // Request Notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        const channel = supabase
+            .channel('realtime_notifications')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                const newMsg = payload.new;
+                if (newMsg && newMsg.receiver_id === user.id) {
+                    setUnreadCount(prev => prev + 1);
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        // Avoid notifying if user is already actively looking at messages
+                        if (!location.pathname.startsWith('/messages')) {
+                            const notification = new Notification('New Direct Message 💬', {
+                                body: 'You received a new message!',
+                            });
+                            notification.onclick = () => {
+                                window.focus();
+                                navigate('/messages');
+                            };
+                        }
+                    }
+                }
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload) => {
+                const newPost = payload.new;
+                if (newPost && newPost.user_id !== user.id) {
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        const notification = new Notification('New Post Alert 📸', {
+                            body: 'Someone just shared a new post!',
+                        });
+                        notification.onclick = () => {
+                            window.focus();
+                            navigate('/');
+                        };
+                    }
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, location.pathname, navigate]);
 
     // Close search on click outside
     useEffect(() => {

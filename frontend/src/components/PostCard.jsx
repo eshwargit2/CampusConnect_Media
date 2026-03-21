@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Trash2, Send, MoreHorizontal, X } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, Send, MoreHorizontal } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot } from '../context/OnlineContext';
@@ -21,10 +22,31 @@ const PostCard = ({ post, onDelete }) => {
     const [loadingComments, setLoadingComments] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [expandedCaption, setExpandedCaption] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
     const commentInputRef = useRef(null);
     const postUser = post.user || {};
     const isOwner = user?.id === postUser.id;
     const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
+    const captionText = post.caption || '';
+    const hasCaption = captionText.trim().length > 0;
+
+    useEffect(() => {
+        if (!showImageModal) return;
+
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape') setShowImageModal(false);
+        };
+
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+            document.body.style.overflow = prevOverflow;
+        };
+    }, [showImageModal]);
 
     const handleLike = async () => {
         if (!user) return toast.error('LOGIN TO LIKE POSTS');
@@ -146,7 +168,8 @@ const PostCard = ({ post, onDelete }) => {
             {/* Image */}
             <div style={{ position: 'relative', borderBottom: '3px solid var(--black)' }}>
                 <img src={post.image_url} alt={post.caption}
-                    style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }}
+                    style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }}
+                    onClick={() => setShowImageModal(true)}
                     onDoubleClick={handleLike} loading="lazy" />
             </div>
 
@@ -180,7 +203,7 @@ const PostCard = ({ post, onDelete }) => {
 
             {/* Caption */}
             <div style={{ padding: '14px 20px', borderBottom: showComments ? '3px solid var(--black)' : 'none', background: 'var(--white)' }}>
-                <p style={{ fontSize: '13px', lineHeight: '1.7' }}>
+                <p style={{ fontSize: '13px', lineHeight: '1.7', marginBottom: hasCaption ? '8px' : 0 }}>
                     <Link to={`/profile/${postUser.username}`} style={{
                         fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700',
                         color: 'var(--black)', textDecoration: 'none', textTransform: 'uppercase',
@@ -188,8 +211,40 @@ const PostCard = ({ post, onDelete }) => {
                     }}>
                         {postUser.username}
                     </Link>
-                    {post.caption}
+                    <span
+                        onClick={() => hasCaption && setExpandedCaption(v => !v)}
+                        style={{
+                            cursor: hasCaption ? 'pointer' : 'default',
+                            display: expandedCaption ? 'inline' : '-webkit-box',
+                            WebkitLineClamp: expandedCaption ? 'unset' : 1,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: expandedCaption ? 'visible' : 'hidden',
+                            textOverflow: 'ellipsis',
+                            verticalAlign: 'top',
+                        }}
+                    >
+                        {captionText}
+                    </span>
                 </p>
+                {hasCaption && (
+                    <button
+                        onClick={() => setExpandedCaption(v => !v)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            fontFamily: "'Space Mono', monospace",
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            letterSpacing: '1.5px',
+                            textTransform: 'uppercase',
+                            color: 'rgba(10,10,10,0.6)',
+                        }}
+                    >
+                        {expandedCaption ? 'Show less' : 'Show more'}
+                    </button>
+                )}
             </div>
 
             {/* Comments */}
@@ -248,6 +303,35 @@ const PostCard = ({ post, onDelete }) => {
                 cancelText="CANCEL"
                 isDangerous={true}
             />
+
+            {showImageModal && createPortal(
+                <div
+                    className="animate-fade-in"
+                    onClick={() => setShowImageModal(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        zIndex: 10000,
+                        background: '#000',
+                    }}
+                >
+                    <img
+                        onClick={() => setShowImageModal(false)}
+                        src={post.image_url}
+                        alt={post.caption}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            width: '100vw',
+                            height: '100vh',
+                            objectFit: 'contain',
+                            display: 'block',
+                            cursor: 'zoom-out',
+                        }}
+                    />
+                </div>,
+                document.body
+            )}
         </article>
     );
 };
