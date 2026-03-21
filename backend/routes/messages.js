@@ -122,6 +122,19 @@ router.post('/:partnerId', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Cannot message yourself' });
     }
 
+    // Privacy check
+    const { data: partnerUser } = await supabase.from('users').select('is_private').eq('id', partnerId).single();
+    if (partnerUser?.is_private) {
+        const { data: follow } = await supabase.from('follows').select('id')
+            .eq('follower_id', userId).eq('following_id', partnerId).eq('status', 'accepted').single();
+            
+        // Also allow replying if they messaged you first, or they follow you? 
+        // Let's just strictly enforce following if private for now.
+        if (!follow) {
+            return res.status(403).json({ error: 'You must follow this private account to message them' });
+        }
+    }
+
     const { data: msg, error } = await supabase
         .from('messages')
         .insert({

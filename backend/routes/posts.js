@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
             .from('posts')
             .select(`
       id, image_url, caption, created_at,
-      user:users!posts_user_id_fkey(id, username, profile_image),
+      user:users!posts_user_id_fkey(*),
       likes(count),
       comments(count)
     `, { count: 'exact' })
@@ -70,15 +70,43 @@ router.get('/', async (req, res) => {
         }
     }
 
-    const enriched = (posts || []).map((post) => ({
-        ...post,
-        likes_count: post.likes?.[0]?.count ?? 0,
-        comments_count: post.comments?.[0]?.count ?? 0,
-        liked_by_me: userLikes.has(post.id),
-    }));
+    // Fetch followed user IDs if current user is authenticated
+    let followedUserIds = new Set();
+    if (currentUserId) {
+        const { data: followsData } = await withRetry(() =>
+            supabase
+                .from('follows')
+                .select('following_id')
+                .eq('follower_id', currentUserId)
+                .eq('status', 'accepted')
+        );
+        if (followsData) {
+            followsData.forEach(f => followedUserIds.add(f.following_id));
+        }
+    }
+
+    // Enrich posts with user info and like status, and filter private posts
+    const enrichedPosts = (posts || [])
+        .filter(post => {
+            // If post user is not private, always show
+            if (!post.user?.is_private) return true;
+            // If current user is the owner of the post, always show
+            if (post.user.id === currentUserId) return true;
+            // If current user follows the post owner, show
+            if (followedUserIds.has(post.user.id)) return true;
+            // Otherwise, hide private posts
+            return false;
+        })
+        .map(post => ({
+            ...post,
+            user: { id: post.user.id, username: post.user.username, profile_image: post.user.profile_image, is_private: post.user.is_private, hide_likes: post.user.hide_likes },
+            likes_count: post.likes?.[0]?.count ?? 0,
+            comments_count: post.comments?.[0]?.count ?? 0,
+            liked_by_me: userLikes.has(post.id),
+        }));
 
     res.json({
-        posts: enriched,
+        posts: enrichedPosts,
         total: count,
         page,
         hasMore: offset + limit < count,
@@ -126,7 +154,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
         })
         .select(`
       id, image_url, caption, created_at,
-      user:users!posts_user_id_fkey(id, username, profile_image)
+      user:users!posts_user_id_fkey(*)
     `)
         .single();
 
@@ -170,6 +198,44 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     }
 
     res.json({ message: 'Post deleted successfully' });
+});
+
+// PUT /api/posts/:id - Update a post caption (owner only)
+router.put('/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const { caption } = req.body;
+
+    if (!caption || caption.trim() === '') {
+        return res.status(400).json({ error: 'Caption is required' });
+    }
+
+    // Verify ownership
+    const { data: post, error } = await supabase
+        .from('posts')
+        .select('id, user_id')
+        .eq('id', id)
+        .single();
+
+    if (error || !post) {
+        return res.status(404).json({ error: 'Post not found' });
+    }
+
+    if (post.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'You can only edit your own posts' });
+    }
+
+    const { data: updatedPost, error: updateError } = await supabase
+        .from('posts')
+        .update({ caption: caption.trim() })
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (updateError) {
+        return res.status(500).json({ error: 'Failed to update post' });
+    }
+
+    res.json({ post: updatedPost });
 });
 
 // POST /api/posts/:id/like - Like or unlike a post
@@ -220,7 +286,7 @@ router.get('/:id/comments', async (req, res) => {
         .from('comments')
         .select(`
       id, comment_text, created_at,
-      user:users!comments_user_id_fkey(id, username, profile_image)
+      user:users!comments_user_id_fkey(*)
     `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
@@ -254,7 +320,7 @@ router.post('/:id/comments', authMiddleware, async (req, res) => {
         })
         .select(`
       id, comment_text, created_at,
-      user:users!comments_user_id_fkey(id, username, profile_image)
+      user:users!comments_user_id_fkey(*)
     `)
         .single();
 
@@ -263,6 +329,25 @@ router.post('/:id/comments', authMiddleware, async (req, res) => {
     }
 
     res.status(201).json({ comment });
+});
+
+// GET /api/posts/:id/likes - Get all users who liked a post
+router.get('/:id/likes', async (req, res) => {
+    const { id: postId } = req.params;
+
+    const { data: likes, error } = await supabase
+        .from('likes')
+        .select(`
+            user:users!likes_user_id_fkey(*)
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        return res.status(500).json({ error: 'Failed to fetch likes' });
+    }
+
+    res.json({ likes: likes ? likes.map(l => l.user) : [] });
 });
 
 module.exports = router;

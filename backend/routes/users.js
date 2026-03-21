@@ -27,7 +27,7 @@ router.get('/search', async (req, res) => {
 
     const { data: users, error } = await supabase
         .from('users')
-        .select('id, username, bio, profile_image')
+        .select('*')
         .ilike('username', `%${q.trim()}%`)
         .limit(8);
 
@@ -45,7 +45,7 @@ router.get('/:username', async (req, res) => {
 
     const { data, error } = await supabase
         .from('users')
-        .select('id, email, username, bio, profile_image, address, website, link_instagram, link_twitter, link_linkedin, link_github, created_at')
+        .select('*')
         .ilike('username', username)
         .limit(1);
 
@@ -59,12 +59,14 @@ router.get('/:username', async (req, res) => {
     const { count: followersCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
-        .eq('following_id', user.id);
+        .eq('following_id', user.id)
+        .eq('status', 'accepted');
 
     const { count: followingCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
-        .eq('follower_id', user.id);
+        .eq('follower_id', user.id)
+        .eq('status', 'accepted');
 
     // Get user's posts with likes/comments counts
     const { data: posts } = await supabase
@@ -102,7 +104,7 @@ router.get('/:username', async (req, res) => {
     // Enrich posts with user info and like status (matching Feed format)
     const enrichedPosts = (posts || []).map(post => ({
         ...post,
-        user: { id: user.id, username: user.username, profile_image: user.profile_image },
+        user: { id: user.id, username: user.username, profile_image: user.profile_image, is_private: user.is_private, hide_likes: user.hide_likes },
         likes_count: post.likes?.[0]?.count ?? 0,
         comments_count: post.comments?.[0]?.count ?? 0,
         liked_by_me: userLikes.has(post.id),
@@ -121,7 +123,7 @@ router.get('/:username', async (req, res) => {
 
 // PUT /api/users/profile/update - Update profile
 router.put('/profile/update', authMiddleware, upload.single('profile_image'), async (req, res) => {
-    const { username, bio, address, website, link_instagram, link_twitter, link_linkedin, link_github } = req.body;
+    const { username, bio, address, website, link_instagram, link_twitter, link_linkedin, link_github, is_private, hide_likes } = req.body;
     const userId = req.user.id;
 
     const updates = {};
@@ -149,6 +151,8 @@ router.put('/profile/update', authMiddleware, upload.single('profile_image'), as
     if (link_twitter !== undefined) updates.link_twitter = link_twitter;
     if (link_linkedin !== undefined) updates.link_linkedin = link_linkedin;
     if (link_github !== undefined) updates.link_github = link_github;
+    if (is_private !== undefined) updates.is_private = is_private;
+    if (hide_likes !== undefined) updates.hide_likes = hide_likes;
 
     // Handle profile image upload
     if (req.file) {
@@ -179,7 +183,7 @@ router.put('/profile/update', authMiddleware, upload.single('profile_image'), as
         .from('users')
         .update(updates)
         .eq('id', userId)
-        .select('id, email, username, bio, profile_image, address, website, link_instagram, link_twitter, link_linkedin, link_github, created_at')
+        .select('*')
         .single();
 
     if (error) {
@@ -199,22 +203,25 @@ router.post('/:userId/follow', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'You cannot follow yourself' });
     }
 
-    // Check if already following
+    // Check if already following or pending
     const { data: existing } = await supabase
         .from('follows')
-        .select('id')
+        .select('id, status')
         .eq('follower_id', followerId)
         .eq('following_id', targetId)
         .single();
 
     if (existing) {
-        // Unfollow
+        // Unfollow / Cancel request
         await supabase.from('follows').delete().eq('id', existing.id);
-        return res.json({ following: false });
+        return res.json({ following: false, status: 'none' });
     } else {
-        // Follow
-        await supabase.from('follows').insert({ follower_id: followerId, following_id: targetId });
-        return res.json({ following: true });
+        // Fetch target user's privacy setting
+        const { data: targetUser } = await supabase.from('users').select('is_private').eq('id', targetId).single();
+        const followStatus = targetUser?.is_private ? 'pending' : 'accepted';
+        
+        await supabase.from('follows').insert({ follower_id: followerId, following_id: targetId, status: followStatus });
+        return res.json({ following: followStatus === 'accepted', status: followStatus });
     }
 });
 
@@ -225,12 +232,12 @@ router.get('/:userId/is-following', authMiddleware, async (req, res) => {
 
     const { data } = await supabase
         .from('follows')
-        .select('id')
+        .select('status')
         .eq('follower_id', followerId)
         .eq('following_id', targetId)
         .single();
 
-    res.json({ following: !!data });
+    res.json({ following: data?.status === 'accepted', status: data?.status || 'none' });
 });
 
 // GET /api/users/:userId/followers - Get list of followers
@@ -240,7 +247,8 @@ router.get('/:userId/followers', async (req, res) => {
     const { data: follows, error } = await supabase
         .from('follows')
         .select('follower_id')
-        .eq('following_id', userId);
+        .eq('following_id', userId)
+        .eq('status', 'accepted');
 
     if (error) return res.status(500).json({ error: 'Failed to fetch followers' });
     if (!follows || follows.length === 0) return res.json({ users: [] });
@@ -264,7 +272,8 @@ router.get('/:userId/following', async (req, res) => {
     const { data: follows, error } = await supabase
         .from('follows')
         .select('following_id')
-        .eq('follower_id', userId);
+        .eq('follower_id', userId)
+        .eq('status', 'accepted');
 
     if (error) return res.status(500).json({ error: 'Failed to fetch following' });
     if (!follows || follows.length === 0) return res.json({ users: [] });
@@ -389,6 +398,61 @@ router.delete('/account', authMiddleware, async (req, res) => {
         console.error('Delete account error:', error);
         res.status(500).json({ error: 'Failed to delete account' });
     }
+});
+
+// GET /api/users/auth/follow-requests
+router.get('/auth/follow-requests', authMiddleware, async (req, res) => {
+    const userId = req.user.id;
+    const { data: requests, error } = await supabase
+        .from('follows')
+        .select('id, follower_id')
+        .eq('following_id', userId)
+        .eq('status', 'pending');
+
+    if (error) return res.status(500).json({ error: 'Failed to fetch requests' });
+    if (!requests || requests.length === 0) return res.json({ requests: [] });
+
+    const followerIds = requests.map(f => f.follower_id);
+    const { data: users, error: usersErr } = await supabase
+        .from('users')
+        .select('id, username, profile_image, bio')
+        .in('id', followerIds);
+
+    if (usersErr) return res.status(500).json({ error: 'Failed to fetch user details' });
+
+    // Map the follow request ID directly into the user object for ease of accept/reject
+    const enrichedUsers = users.map(u => {
+        const reqData = requests.find(r => r.follower_id === u.id);
+        return { ...u, request_id: reqData?.id };
+    });
+
+    res.json({ requests: enrichedUsers });
+});
+
+// PUT /api/users/auth/follow-requests/:id/accept
+router.put('/auth/follow-requests/:id/accept', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const { error } = await supabase
+        .from('follows')
+        .update({ status: 'accepted' })
+        .eq('id', id)
+        .eq('following_id', req.user.id);
+
+    if (error) return res.status(500).json({ error: 'Failed to accept request' });
+    res.json({ success: true });
+});
+
+// DELETE /api/users/auth/follow-requests/:id/reject
+router.delete('/auth/follow-requests/:id/reject', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const { error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('id', id)
+        .eq('following_id', req.user.id);
+
+    if (error) return res.status(500).json({ error: 'Failed to reject request' });
+    res.json({ success: true });
 });
 
 module.exports = router;

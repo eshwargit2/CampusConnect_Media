@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, Trash2, Eye, Clock, Send, Heart } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Eye, Clock, Send, Heart, Edit2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
@@ -9,6 +9,24 @@ import toast from 'react-hot-toast';
 
 // ── Quick emoji reactions (Instagram-style) ──────────────────────────
 const QUICK_REACTIONS = ['❤️', '🔥', '😂', '😮', '😢', '👏'];
+
+const renderTextWithLinks = (text) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, i) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a key={i} href={part} target="_blank" rel="noopener noreferrer" 
+                   style={{ color: 'var(--yellow)', textDecoration: 'underline', pointerEvents: 'auto' }} 
+                   onClick={(e) => e.stopPropagation()}>
+                    {part}
+                </a>
+            );
+        }
+        return part;
+    });
+};
 
 const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
     const { user } = useAuth();
@@ -28,6 +46,11 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
     const [sentReaction, setSentReaction] = useState(null); // floating animation
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    
+    // Edit state
+    const [isEditing, setIsEditing] = useState(false);
+    const [editCaption, setEditCaption] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     // Like state — initialized from story data
     const [liked, setLiked] = useState(false);
@@ -53,7 +76,7 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
     const isOwner = user?.id === currentGroup?.user?.id;
 
     // Pause timer when reply bar is focused, reactions open, or delete confirmation is shown
-    const isInputActive = replyFocused || showReactions || showDeleteConfirm;
+    const isInputActive = replyFocused || showReactions || showDeleteConfirm || isEditing;
 
     // Record view
     useEffect(() => {
@@ -64,6 +87,8 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
 
     // Reset reply + like when story changes
     useEffect(() => {
+        setIsEditing(false);
+        setEditCaption(currentStory?.caption || '');
         setReplyText('');
         setSentReaction(null);
         setShowReactions(false);
@@ -202,6 +227,21 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
             toast.error('FAILED TO DELETE');
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    // ── Edit ─────────────────────────────────────────────────────────
+    const handleEditSave = async () => {
+        setIsSaving(true);
+        try {
+            const { data } = await api.put(`/stories/${currentStory.id}`, { caption: editCaption });
+            currentStory.caption = data.story.caption;
+            setIsEditing(false);
+            toast.success('STORY UPDATED');
+        } catch {
+            toast.error('FAILED TO UPDATE');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -363,6 +403,11 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                     <div style={{ display: 'flex', gap: '6px' }}>
                         {isOwner && (
                             <>
+                                <button onClick={() => { setIsEditing(true); setEditCaption(currentStory.caption || ''); }} style={{
+                                    background: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.5)',
+                                    color: 'white', cursor: 'pointer', width: '32px', height: '32px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}><Edit2 size={14} /></button>
                                 <button onClick={() => setShowDeleteConfirm(true)} style={{
                                     background: 'rgba(255,0,0,0.2)', border: '2px solid rgba(255,100,100,0.5)',
                                     color: '#ff6b6b', cursor: 'pointer', width: '32px', height: '32px',
@@ -447,7 +492,7 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                 )}
 
                 {/* Caption overlay */}
-                {currentStory.caption && (
+                {currentStory.caption && !isEditing && (
                     <div style={{
                         position: 'absolute',
                         bottom: isOwner ? '80px' : '76px',
@@ -460,7 +505,48 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                             color: 'white', fontSize: '14px', lineHeight: '1.5',
                             textShadow: '0 1px 4px rgba(0,0,0,0.5)',
                             fontFamily: "'Space Mono', monospace",
-                        }}>{currentStory.caption}</p>
+                            pointerEvents: 'auto',
+                        }}>{renderTextWithLinks(currentStory.caption)}</p>
+                    </div>
+                )}
+
+                {/* Edit Caption overlay */}
+                {isEditing && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '80px',
+                        left: 0, right: 0,
+                        zIndex: 10, padding: '20px',
+                        background: 'rgba(0,0,0,0.85)',
+                        borderTop: '2px solid var(--yellow)',
+                        display: 'flex', flexDirection: 'column', gap: '10px'
+                    }}
+                        onMouseDown={e => e.stopPropagation()}
+                        onTouchStart={e => e.stopPropagation()}
+                    >
+                        <textarea
+                            value={editCaption}
+                            onChange={(e) => setEditCaption(e.target.value)}
+                            style={{
+                                width: '100%', padding: '10px', fontSize: '13px',
+                                fontFamily: "'Space Mono', monospace", border: '2px solid var(--yellow)',
+                                background: 'rgba(255,224,0,0.1)', outline: 'none', resize: 'vertical', minHeight: '60px',
+                                color: 'white',
+                            }}
+                            autoFocus
+                        />
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setIsEditing(false)} disabled={isSaving} style={{
+                                background: 'none', border: '2px solid white', color: 'white',
+                                padding: '6px 12px', fontSize: '10px', fontWeight: '700', cursor: 'pointer',
+                                fontFamily: "'Space Mono', monospace", letterSpacing: '1px', textTransform: 'uppercase'
+                            }}>CANCEL</button>
+                            <button onClick={handleEditSave} disabled={isSaving} style={{
+                                background: 'var(--yellow)', border: '2px solid var(--yellow)', color: 'var(--black)',
+                                padding: '6px 12px', fontSize: '10px', fontWeight: '700', cursor: 'pointer',
+                                fontFamily: "'Space Mono', monospace", letterSpacing: '1px', textTransform: 'uppercase'
+                            }}>{isSaving ? 'SAVING...' : 'SAVE'}</button>
+                        </div>
                     </div>
                 )}
 
@@ -623,7 +709,7 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                                     stroke={liked ? '#ff3c5a' : 'rgba(255,255,255,0.6)'}
                                     strokeWidth={2}
                                 />
-                                {likesCount > 0 && (
+                                {likesCount > 0 && (!currentGroup.user.hide_likes || isOwner) && (
                                     <span style={{
                                         fontSize: '8px', fontWeight: '700', lineHeight: 1,
                                         color: liked ? '#ff3c5a' : 'rgba(255,255,255,0.5)',

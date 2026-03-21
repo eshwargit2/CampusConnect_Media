@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
         .from('stories')
         .select(`
             id, image_url, caption, created_at,
-            user:users!stories_user_id_fkey(id, username, profile_image),
+            user:users!stories_user_id_fkey(*),
             views_count:story_views(count),
             likes_count:story_likes(count)
         `)
@@ -65,15 +65,29 @@ router.get('/', async (req, res) => {
         if (myViews) myViews.forEach(v => viewedStoryIds.add(v.story_id));
     }
 
+    // Fetch followed user IDs if authenticated
+    let followedUserIds = new Set();
+    if (currentUserId) {
+        const { data: followsData } = await supabase.from('follows').select('following_id').eq('follower_id', currentUserId).eq('status', 'accepted');
+        if (followsData) {
+            followsData.forEach(f => followedUserIds.add(f.following_id));
+        }
+    }
+
     // Group stories by user
     const userMap = new Map();
     for (const story of (stories || [])) {
         const userId = story.user?.id;
         if (!userId) continue;
 
+        // Privacy check: exclude if private and not current user and not followed
+        if (story.user.is_private && userId !== currentUserId && !followedUserIds.has(userId)) {
+            continue;
+        }
+
         if (!userMap.has(userId)) {
             userMap.set(userId, {
-                user: story.user,
+                user: { ...story.user, is_private: story.user.is_private, hide_likes: story.user.hide_likes },
                 stories: [],
                 hasUnviewed: false,
                 latestAt: story.created_at,
@@ -146,7 +160,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
         })
         .select(`
             id, image_url, caption, created_at,
-            user:users!stories_user_id_fkey(id, username, profile_image)
+            user:users!stories_user_id_fkey(*)
         `)
         .single();
 
@@ -216,7 +230,7 @@ router.get('/:id/viewers', authMiddleware, async (req, res) => {
             .from('story_views')
             .select(`
                 viewed_at,
-                viewer:users!story_views_viewer_id_fkey(id, username, profile_image)
+                viewer:users!story_views_viewer_id_fkey(*)
             `)
             .eq('story_id', storyId)
             .order('viewed_at', { ascending: false }),
@@ -333,7 +347,7 @@ router.post('/:id/reply', authMiddleware, async (req, res) => {
         .insert({ story_id: storyId, sender_id: senderId, content: content.trim() })
         .select(`
             id, content, created_at,
-            sender:users!story_replies_sender_id_fkey(id, username, profile_image)
+            sender:users!story_replies_sender_id_fkey(*)
         `)
         .single();
 
@@ -374,7 +388,7 @@ router.get('/:id/replies', authMiddleware, async (req, res) => {
         .from('story_replies')
         .select(`
             id, content, created_at,
-            sender:users!story_replies_sender_id_fkey(id, username, profile_image)
+            sender:users!story_replies_sender_id_fkey(*)
         `)
         .eq('story_id', storyId)
         .order('created_at', { ascending: false });
@@ -417,6 +431,38 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     }
 
     res.json({ message: 'Story deleted' });
+});
+
+// ─── PUT /api/stories/:id — Edit a story caption ──────────────
+router.put('/:id', authMiddleware, async (req, res) => {
+    const { id: storyId } = req.params;
+    const { caption } = req.body;
+
+    // Verify ownership
+    const { data: story } = await supabase
+        .from('stories')
+        .select('id, user_id')
+        .eq('id', storyId)
+        .single();
+
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+    if (story.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'You can only edit your own stories' });
+    }
+
+    const { data: updatedStory, error } = await supabase
+        .from('stories')
+        .update({ caption: (caption || '').trim() })
+        .eq('id', storyId)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Update story error:', error);
+        return res.status(500).json({ error: 'Failed to update story' });
+    }
+
+    res.json({ story: updatedStory });
 });
 
 // ─── CLEANUP: Delete expired stories (run periodically) ─────────────
