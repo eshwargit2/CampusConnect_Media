@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, PlusSquare, User, LogOut, GraduationCap, Menu, X, Search, MessageSquare } from 'lucide-react';
+import { Home, PlusSquare, User, LogOut, GraduationCap, Menu, X, Search, MessageSquare, Sun, Moon } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import api from '../lib/api';
 import { supabase } from '../lib/supabaseClient';
@@ -13,6 +13,16 @@ const Navbar = ({ onUploadClick }) => {
     const isMobile = useIsMobile(768);
     const [menuOpen, setMenuOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    };
 
     // Search state
     const [searchOpen, setSearchOpen] = useState(false);
@@ -178,18 +188,29 @@ const Navbar = ({ onUploadClick }) => {
                                 }
                             />
 
+                            <button onClick={toggleTheme} style={{
+                                background: 'transparent', border: 'none', borderBottom: '3px solid transparent',
+                                color: 'var(--white-60)', cursor: 'crosshair', padding: '20px 16px',
+                                display: 'flex', alignItems: 'center', transition: 'all 0.15s',
+                            }}
+                                onMouseEnter={e => { e.currentTarget.style.color = 'var(--white)'; e.currentTarget.style.background = 'var(--white-05)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.color = 'var(--white-60)'; e.currentTarget.style.background = 'transparent'; }}
+                            >
+                                {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+                            </button>
+
                             {/* Search button */}
                             <button onClick={openSearch} style={{
                                 background: searchOpen ? 'rgba(255,224,0,0.08)' : 'none',
                                 border: 'none', borderBottom: searchOpen ? '3px solid var(--yellow)' : '3px solid transparent',
-                                color: searchOpen ? 'var(--yellow)' : 'rgba(245,240,232,0.6)',
+                                color: searchOpen ? 'var(--yellow)' : 'var(--white-60)',
                                 cursor: 'crosshair', padding: '20px 16px',
                                 display: 'flex', alignItems: 'center', gap: '7px',
                                 fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: '700',
                                 letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s',
                             }}
-                                onMouseEnter={e => { if (!searchOpen) { e.currentTarget.style.color = 'var(--white)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; } }}
-                                onMouseLeave={e => { if (!searchOpen) { e.currentTarget.style.color = 'rgba(245,240,232,0.6)'; e.currentTarget.style.background = 'none'; } }}
+                                onMouseEnter={e => { if (!searchOpen) { e.currentTarget.style.color = 'var(--white)'; e.currentTarget.style.background = 'var(--white-05)'; } }}
+                                onMouseLeave={e => { if (!searchOpen) { e.currentTarget.style.color = 'var(--white-60)'; e.currentTarget.style.background = 'none'; } }}
                             >
                                 <Search size={14} /> SEARCH
                             </button>
@@ -210,7 +231,7 @@ const Navbar = ({ onUploadClick }) => {
                             />
                             <button onClick={handleLogout} style={{
                                 background: 'none', border: 'none',
-                                borderLeft: '3px solid rgba(255,255,255,0.15)',
+                                borderLeft: '3px solid var(--white-15)',
                                 color: 'var(--white)', cursor: 'crosshair', padding: '20px 16px',
                                 display: 'flex', alignItems: 'center',
                                 transition: 'background 0.15s',
@@ -226,10 +247,20 @@ const Navbar = ({ onUploadClick }) => {
                     {/* Mobile: right side */}
                     {user && isMobile && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {/* Theme map */}
+                            <button onClick={toggleTheme} style={{
+                                background: 'none',
+                                border: '2px solid var(--white-30)',
+                                color: 'var(--white)',
+                                width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', flexShrink: 0,
+                            }}>
+                                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                            </button>
                             {/* Search button */}
                             <button onClick={openSearch} style={{
                                 background: searchOpen ? 'var(--yellow)' : 'none',
-                                border: '2px solid ' + (searchOpen ? 'var(--yellow)' : 'rgba(255,255,255,0.3)'),
+                                border: '2px solid ' + (searchOpen ? 'var(--yellow)' : 'var(--white-30)'),
                                 color: searchOpen ? 'var(--black)' : 'var(--white)',
                                 width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 cursor: 'pointer', flexShrink: 0,
@@ -246,7 +277,7 @@ const Navbar = ({ onUploadClick }) => {
                             </button>
                             {/* Hamburger */}
                             <button onClick={() => setMenuOpen(!menuOpen)} style={{
-                                background: 'none', border: '2px solid rgba(255,255,255,0.3)',
+                                background: 'none', border: '2px solid var(--white-30)',
                                 color: 'var(--white)', cursor: 'pointer',
                                 width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 flexShrink: 0,
@@ -304,7 +335,7 @@ const Navbar = ({ onUploadClick }) => {
                             <button onClick={() => { setSearchOpen(false); setQuery(''); setResults([]); }}
                                 style={{
                                     background: 'none', border: 'none', cursor: 'pointer',
-                                    color: 'rgba(245,240,232,0.4)', padding: '4px', flexShrink: 0,
+                                    color: 'var(--white-40)', padding: '4px', flexShrink: 0,
                                 }}>
                                 <X size={16} />
                             </button>
@@ -317,7 +348,7 @@ const Navbar = ({ onUploadClick }) => {
                                     <div style={{
                                         padding: '24px', textAlign: 'center',
                                         fontSize: '10px', letterSpacing: '3px',
-                                        color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase',
+                                        color: 'var(--white-40)', textTransform: 'uppercase',
                                     }}>
                                         SEARCHING...
                                     </div>
@@ -325,7 +356,7 @@ const Navbar = ({ onUploadClick }) => {
                                     <div style={{
                                         padding: '24px', textAlign: 'center',
                                         fontSize: '10px', letterSpacing: '3px',
-                                        color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase',
+                                        color: 'var(--white-40)', textTransform: 'uppercase',
                                     }}>
                                         NO USERS FOUND
                                     </div>
@@ -339,7 +370,7 @@ const Navbar = ({ onUploadClick }) => {
                                                 display: 'flex', alignItems: 'center', gap: '14px',
                                                 padding: '14px 16px',
                                                 textDecoration: 'none',
-                                                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                                borderBottom: '1px solid var(--white-06)',
                                                 transition: 'background 0.12s',
                                             }}
                                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,224,0,0.06)'}
@@ -379,7 +410,7 @@ const Navbar = ({ onUploadClick }) => {
                                                 </p>
                                                 {u.bio && (
                                                     <p style={{
-                                                        fontSize: '11px', color: 'rgba(245,240,232,0.4)',
+                                                        fontSize: '11px', color: 'var(--white-40)',
                                                         marginTop: '2px',
                                                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                                     }}>
@@ -404,7 +435,7 @@ const Navbar = ({ onUploadClick }) => {
                             borderTop: '2px solid rgba(255,224,0,0.15)',
                             display: 'flex', justifyContent: 'space-between',
                             fontSize: '9px', letterSpacing: '2px',
-                            color: 'rgba(245,240,232,0.25)', textTransform: 'uppercase',
+                            color: 'var(--white-25)', textTransform: 'uppercase',
                         }}>
                             <span>FIND PEOPLE</span>
                             <span>ESC TO CLOSE</span>
@@ -437,7 +468,7 @@ const Navbar = ({ onUploadClick }) => {
                             MENU
                         </span>
                         <button onClick={closeMenu} style={{
-                            background: 'none', border: '2px solid rgba(255,255,255,0.3)',
+                            background: 'none', border: '2px solid var(--white-30)',
                             color: 'var(--white)', cursor: 'pointer',
                             width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
@@ -447,7 +478,7 @@ const Navbar = ({ onUploadClick }) => {
 
                     {/* User badge */}
                     <div style={{
-                        padding: '20px 24px', borderBottom: '2px solid rgba(255,255,255,0.08)',
+                        padding: '20px 24px', borderBottom: '2px solid var(--white-08)',
                         display: 'flex', alignItems: 'center', gap: '14px',
                     }}>
                         {user.profile_image
@@ -462,7 +493,7 @@ const Navbar = ({ onUploadClick }) => {
                             <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '16px', color: 'var(--white)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                 {user.username}
                             </p>
-                            <p style={{ fontSize: '10px', letterSpacing: '2px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase', marginTop: '2px' }}>
+                            <p style={{ fontSize: '10px', letterSpacing: '2px', color: 'var(--white-40)', textTransform: 'uppercase', marginTop: '2px' }}>
                                 COLLEGE MEMBER
                             </p>
                         </div>
@@ -517,13 +548,13 @@ const DesktopLink = ({ to, active, label, icon }) => (
         padding: '20px 16px', textDecoration: 'none',
         fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: '700',
         letterSpacing: '1px', textTransform: 'uppercase',
-        color: active ? 'var(--yellow)' : 'rgba(245,240,232,0.6)',
+        color: active ? 'var(--yellow)' : 'var(--white-60)',
         background: active ? 'rgba(255,224,0,0.08)' : 'transparent',
         borderBottom: active ? '3px solid var(--yellow)' : '3px solid transparent',
         transition: 'all 0.15s',
     }}
-        onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'var(--white)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; } }}
-        onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'rgba(245,240,232,0.6)'; e.currentTarget.style.background = 'transparent'; } }}
+        onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'var(--white)'; e.currentTarget.style.background = 'var(--white-05)'; } }}
+        onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'var(--white-60)'; e.currentTarget.style.background = 'transparent'; } }}
     >
         {icon}{label}
     </Link>

@@ -61,7 +61,7 @@ const ProfilePanel = ({ partner, partnerId, onClose, isMobile }) => {
     }, [partner?.username]);
 
     const body = (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--white)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-body)', color: 'var(--text-body)' }}>
             {/* Header */}
             <div style={{
                 background: 'var(--black)', padding: '12px 16px', flexShrink: 0,
@@ -90,18 +90,18 @@ const ProfilePanel = ({ partner, partnerId, onClose, isMobile }) => {
                         <OnlineDot userId={partnerId} size={12} />
                     </div>
 
-                    <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--black)', margin: '0 0 4px' }}>
+                    <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-body)', margin: '0 0 4px' }}>
                         {partner?.username}
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
-                        <div style={{ width: '6px', height: '6px', background: isOnline ? '#00FF88' : 'rgba(10,10,10,0.2)', boxShadow: isOnline ? '0 0 5px rgba(0,255,136,0.6)' : 'none' }} />
-                        <span style={{ fontSize: '9px', letterSpacing: '2px', fontWeight: '700', color: isOnline ? '#00a85a' : 'rgba(10,10,10,0.4)', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>
+                        <div style={{ width: '6px', height: '6px', background: isOnline ? '#00FF88' : 'color-mix(in srgb, var(--text-body) 20%, transparent)', boxShadow: isOnline ? '0 0 5px rgba(0,255,136,0.6)' : 'none' }} />
+                        <span style={{ fontSize: '9px', letterSpacing: '2px', fontWeight: '700', color: isOnline ? '#00a85a' : 'color-mix(in srgb, var(--text-body) 40%, transparent)', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>
                             {isOnline ? 'ONLINE NOW' : 'OFFLINE'}
                         </span>
                     </div>
 
                     {(stats?.bio || partner?.bio) && (
-                        <p style={{ fontSize: '12px', color: 'rgba(10,10,10,0.6)', lineHeight: '1.55', marginBottom: '14px' }}>
+                        <p style={{ fontSize: '12px', color: 'color-mix(in srgb, var(--text-body) 60%, transparent)', lineHeight: '1.55', marginBottom: '14px' }}>
                             {stats?.bio || partner?.bio}
                         </p>
                     )}
@@ -110,8 +110,8 @@ const ProfilePanel = ({ partner, partnerId, onClose, isMobile }) => {
                         <div style={{ display: 'flex', border: '2px solid var(--black)', marginBottom: '16px', boxShadow: '2px 2px 0 var(--black)' }}>
                             {[{ l: 'POSTS', v: stats.posts_count ?? 0 }, { l: 'FOLLOWERS', v: stats.followers_count ?? 0 }, { l: 'FOLLOWING', v: stats.following_count ?? 0 }].map((s, i) => (
                                 <div key={s.l} style={{ flex: 1, textAlign: 'center', padding: '10px 4px', borderRight: i < 2 ? '2px solid var(--black)' : 'none' }}>
-                                    <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '14px', color: 'var(--black)' }}>{s.v}</p>
-                                    <p style={{ fontSize: '7px', letterSpacing: '1px', color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>{s.l}</p>
+                                    <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '14px', color: 'var(--text-body)' }}>{s.v}</p>
+                                    <p style={{ fontSize: '7px', letterSpacing: '1px', color: 'color-mix(in srgb, var(--text-body) 40%, transparent)', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>{s.l}</p>
                                 </div>
                             ))}
                         </div>
@@ -208,7 +208,7 @@ const MessageBubble = ({ msg, isMe, showAv, partner, isMobile, onEdit, onDelete 
                             onClick={() => setMenuOpen(s => !s)}
                             style={{
                                 background: 'none', border: 'none', cursor: 'pointer',
-                                color: 'rgba(10,10,10,0.25)',
+                                color: 'color-mix(in srgb, var(--text-body) 25%, transparent)',
                                 /* Larger touch target on mobile */
                                 padding: isMobile ? '8px 6px' : '4px',
                                 minWidth: isMobile ? '36px' : 'auto',
@@ -217,8 +217,8 @@ const MessageBubble = ({ msg, isMe, showAv, partner, isMobile, onEdit, onDelete 
                                 transition: 'color 0.1s',
                                 WebkitTapHighlightColor: 'transparent',
                             }}
-                            onMouseEnter={e => e.currentTarget.style.color = 'rgba(10,10,10,0.6)'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(10,10,10,0.25)'}
+                            onMouseEnter={e => e.currentTarget.style.color = 'color-mix(in srgb, var(--text-body) 60%, transparent)'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'color-mix(in srgb, var(--text-body) 25%, transparent)'}
                         >
                             <svg width={isMobile ? 16 : 14} height={isMobile ? 16 : 14} viewBox="0 0 24 24" fill="currentColor">
                                 <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
@@ -271,10 +271,10 @@ const MessageBubble = ({ msg, isMe, showAv, partner, isMobile, onEdit, onDelete 
 
                 {/* Bubble */}
                 <div style={{
-                    background: isMe ? 'var(--black)' : '#f8f6f0',
+                    background: isMe ? 'var(--black)' : 'color-mix(in srgb, var(--text-body) 6%, transparent)',
                     border: '2px solid var(--black)',
                     padding: editing ? '6px 8px' : (isMobile ? '8px 11px' : '9px 13px'),
-                    boxShadow: isMe ? '2px 2px 0 rgba(255,224,0,0.45)' : '2px 2px 0 rgba(10,10,10,0.1)',
+                    boxShadow: isMe ? '2px 2px 0 rgba(255,224,0,0.45)' : '2px 2px 0 color-mix(in srgb, var(--text-body) 10%, transparent)',
                     opacity: isOpt ? 0.55 : 1,
                     transition: 'opacity 0.2s',
                     flex: 1,
@@ -309,13 +309,13 @@ const MessageBubble = ({ msg, isMe, showAv, partner, isMobile, onEdit, onDelete 
                     ) : (
                         <>
                             <p style={{
-                                color: isMe ? 'var(--white)' : 'var(--black)',
+                                color: isMe ? 'var(--white)' : 'var(--text-body)',
                                 fontSize: isMobile ? '13.5px' : '13px', lineHeight: '1.55',
                                 wordBreak: 'break-word', fontFamily: "'Space Grotesk', sans-serif",
                             }}>{msg.content}</p>
                             <p style={{
                                 fontSize: '8px', letterSpacing: '0.3px',
-                                color: isMe ? 'rgba(245,240,232,0.38)' : 'rgba(10,10,10,0.28)',
+                                color: isMe ? 'rgba(245,240,232,0.38)' : 'color-mix(in srgb, var(--text-body) 28%, transparent)',
                                 marginTop: '4px', textAlign: 'right',
                                 fontFamily: "'Space Mono', monospace",
                             }}>
@@ -497,7 +497,7 @@ const Messages = () => {
             margin: isMobile ? '64px 0 0' : '64px auto 0',
             border: isMobile ? 'none' : '3px solid var(--black)',
             boxShadow: isMobile ? 'none' : '6px 6px 0 var(--black)',
-            background: 'var(--white)',
+            background: 'var(--bg-body)', color: 'var(--text-body)',
             overflow: 'hidden',
             /* Account for left/right safe areas on notched phones in landscape */
             paddingLeft: 'env(safe-area-inset-left, 0px)',
@@ -577,9 +577,9 @@ const Messages = () => {
                             </div>
                         ) : conversations.length === 0 ? (
                             <div style={{ padding: '50px 20px', textAlign: 'center' }}>
-                                <MessageSquare size={36} style={{ color: 'rgba(10,10,10,0.12)', margin: '0 auto 14px', display: 'block' }} />
-                                <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', fontWeight: '700', marginBottom: '6px' }}>NO CONVERSATIONS</p>
-                                <p style={{ fontSize: '11px', color: 'rgba(10,10,10,0.3)' }}>Tap 🔍 to find someone</p>
+                                <MessageSquare size={36} style={{ color: 'color-mix(in srgb, var(--text-body) 12%, transparent)', margin: '0 auto 14px', display: 'block' }} />
+                                <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--text-body) 35%, transparent)', fontWeight: '700', marginBottom: '6px' }}>NO CONVERSATIONS</p>
+                                <p style={{ fontSize: '11px', color: 'color-mix(in srgb, var(--text-body) 30%, transparent)' }}>Tap 🔍 to find someone</p>
                             </div>
                         ) : conversations.map(conv => {
                             const active = conv.partner.id === partnerId;
@@ -591,7 +591,7 @@ const Messages = () => {
                                         width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
                                         padding: isMobile ? '15px 16px' : '13px 15px',
                                         background: active ? 'rgba(255,224,0,0.1)' : 'none',
-                                        border: 'none', borderBottom: '1px solid rgba(10,10,10,0.07)',
+                                        border: 'none', borderBottom: '1px solid color-mix(in srgb, var(--text-body) 7%, transparent)',
                                         borderLeft: active ? '4px solid var(--yellow)' : '4px solid transparent',
                                         cursor: 'pointer', textAlign: 'left', WebkitTapHighlightColor: 'transparent',
                                     }}
@@ -604,16 +604,16 @@ const Messages = () => {
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
-                                            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', color: 'var(--black)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 {conv.partner.username}
                                             </p>
-                                            <span style={{ fontSize: '9px', color: 'rgba(10,10,10,0.35)', flexShrink: 0, fontFamily: "'Space Mono', monospace" }}>
+                                            <span style={{ fontSize: '9px', color: 'color-mix(in srgb, var(--text-body) 35%, transparent)', flexShrink: 0, fontFamily: "'Space Mono', monospace" }}>
                                                 {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: false })}
                                             </span>
                                         </div>
                                         <p style={{
                                             fontSize: '12px',
-                                            color: conv.unread > 0 ? 'var(--black)' : 'rgba(10,10,10,0.45)',
+                                            color: conv.unread > 0 ? 'var(--text-body)' : 'color-mix(in srgb, var(--text-body) 45%, transparent)',
                                             fontWeight: conv.unread > 0 ? '600' : '400',
                                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                         }}>
@@ -637,8 +637,8 @@ const Messages = () => {
                 <div style={{ flex: 1, display: 'flex', minWidth: 0, overflow: 'hidden' }}>
                     {!partnerId ? (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
-                            <MessageSquare size={52} style={{ color: 'rgba(10,10,10,0.08)' }} />
-                            <p style={{ fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.25)', fontWeight: '700', fontFamily: "'Space Mono', monospace" }}>
+                            <MessageSquare size={52} style={{ color: 'color-mix(in srgb, var(--text-body) 8%, transparent)' }} />
+                            <p style={{ fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--text-body) 25%, transparent)', fontWeight: '700', fontFamily: "'Space Mono', monospace" }}>
                                 SELECT A CONVERSATION
                             </p>
                         </div>
@@ -703,7 +703,7 @@ const Messages = () => {
                                             alignItems: 'center',
                                             gap: '10px',
                                             padding: '10px 12px 12px',
-                                            borderBottom: '1px dashed rgba(10,10,10,0.1)',
+                                            borderBottom: '1px dashed color-mix(in srgb, var(--text-body) 10%, transparent)',
                                             marginBottom: '8px',
                                             flexShrink: 0,
                                         }}>
@@ -718,12 +718,12 @@ const Messages = () => {
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     cursor: 'pointer',
                                                     flexShrink: 0,
-                                                    boxShadow: '2px 2px 0 rgba(10,10,10,0.12)',
+                                                    boxShadow: '2px 2px 0 color-mix(in srgb, var(--text-body) 12%, transparent)',
                                                     WebkitTapHighlightColor: 'transparent',
                                                     transition: 'box-shadow 0.15s, transform 0.15s',
                                                 }}
                                                 onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = '3px 3px 0 var(--yellow)'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '2px 2px 0 rgba(10,10,10,0.12)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '2px 2px 0 color-mix(in srgb, var(--text-body) 12%, transparent)'; }}
                                             >
                                                 <ArrowLeft size={13} />
                                             </button>
@@ -742,7 +742,7 @@ const Messages = () => {
                                                     fontSize: isMobile ? '13px' : '14px',
                                                     textTransform: 'uppercase',
                                                     letterSpacing: '0.8px',
-                                                    color: 'var(--black)',
+                                                    color: 'var(--text-body)',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                     whiteSpace: 'nowrap',
@@ -760,14 +760,14 @@ const Messages = () => {
                                                         WebkitTapHighlightColor: 'transparent',
                                                     }}
                                                 >
-                                                    <Info size={9} color="rgba(10,10,10,0.3)" />
+                                                    <Info size={9} color="color-mix(in srgb, var(--text-body) 30%, transparent)" />
                                                     <span style={{
                                                         fontSize: '8px',
                                                         letterSpacing: '1px',
                                                         fontWeight: '700',
                                                         textTransform: 'uppercase',
                                                         fontFamily: "'Space Mono', monospace",
-                                                        color: 'rgba(10,10,10,0.3)',
+                                                        color: 'color-mix(in srgb, var(--text-body) 30%, transparent)',
                                                     }}>VIEW PROFILE</span>
                                                 </button>
                                             </div>
@@ -780,18 +780,18 @@ const Messages = () => {
                                         </div>
                                     ) : messages.length === 0 ? (
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '30px 20px' }}>
-                                            <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.3)', fontWeight: '700', fontFamily: "'Space Mono', monospace" }}>NO MESSAGES YET</p>
+                                            <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--text-body) 30%, transparent)', fontWeight: '700', fontFamily: "'Space Mono', monospace" }}>NO MESSAGES YET</p>
                                             <p style={{ fontSize: '20px' }}>👋</p>
-                                            <p style={{ fontSize: '12px', color: 'rgba(10,10,10,0.4)', fontFamily: "'Space Grotesk', sans-serif" }}>Say hello to {partner?.username}!</p>
+                                            <p style={{ fontSize: '12px', color: 'color-mix(in srgb, var(--text-body) 40%, transparent)', fontFamily: "'Space Grotesk', sans-serif" }}>Say hello to {partner?.username}!</p>
                                         </div>
                                     ) : Object.entries(groupedMessages).map(([key, dayMsgs]) => (
                                         <React.Fragment key={key}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '10px 0 6px' }}>
-                                                <div style={{ flex: 1, height: '1px', background: 'rgba(10,10,10,0.08)' }} />
-                                                <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(10,10,10,0.3)', fontWeight: '700', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>
+                                                <div style={{ flex: 1, height: '1px', background: 'color-mix(in srgb, var(--text-body) 8%, transparent)' }} />
+                                                <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'color-mix(in srgb, var(--text-body) 30%, transparent)', fontWeight: '700', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>
                                                     {dateLabel(key)}
                                                 </span>
-                                                <div style={{ flex: 1, height: '1px', background: 'rgba(10,10,10,0.08)' }} />
+                                                <div style={{ flex: 1, height: '1px', background: 'color-mix(in srgb, var(--text-body) 8%, transparent)' }} />
                                             </div>
                                             {dayMsgs.map((msg, idx) => (
                                                 <MessageBubble
@@ -815,7 +815,7 @@ const Messages = () => {
                                 {/* On desktop: normal flex child at bottom of column */}
                                 <div style={{
                                     borderTop: '3px solid var(--black)',
-                                    background: 'var(--white)',
+                                    background: 'var(--bg-body)', color: 'var(--text-body)',
                                     display: 'flex', alignItems: 'flex-end',
                                     flexShrink: 0,
                                     /* === MOBILE: fixed to stay above keyboard === */
@@ -849,7 +849,7 @@ const Messages = () => {
                                             fontSize: isMobile ? '16px' : '13px',
                                             fontFamily: "'Space Grotesk', sans-serif",
                                             lineHeight: '1.5', background: 'transparent',
-                                            color: 'var(--black)',
+                                            color: 'var(--text-body)',
                                             minHeight: `${INPUT_BAR_HEIGHT}px`,
                                             maxHeight: '120px',
                                             overflowY: 'auto',
@@ -860,9 +860,9 @@ const Messages = () => {
                                         onClick={sendMessage}
                                         disabled={!text.trim() || sending}
                                         style={{
-                                            background: text.trim() ? 'var(--black)' : 'rgba(10,10,10,0.07)',
+                                            background: text.trim() ? 'var(--black)' : 'color-mix(in srgb, var(--text-body) 7%, transparent)',
                                             border: 'none', borderLeft: '3px solid var(--black)',
-                                            color: text.trim() ? 'var(--yellow)' : 'rgba(10,10,10,0.2)',
+                                            color: text.trim() ? 'var(--yellow)' : 'color-mix(in srgb, var(--text-body) 20%, transparent)',
                                             width: isMobile ? '58px' : 'auto',
                                             padding: isMobile ? '0' : '0 20px',
                                             minHeight: `${INPUT_BAR_HEIGHT}px`,

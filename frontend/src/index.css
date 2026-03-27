@@ -17,10 +17,27 @@
   --red: #FF2D2D;
   --blue: #0055FF;
   --green: #00FF88;
-  --border: 3px solid #0a0a0a;
-  --border-thick: 5px solid #0a0a0a;
-  --shadow: 6px 6px 0 #0a0a0a;
-  --shadow-lg: 10px 10px 0 #0a0a0a;
+  --border: 3px solid var(--black);
+  --border-thick: 5px solid var(--black);
+  --shadow: 6px 6px 0 var(--black);
+  --shadow-lg: 10px 10px 0 var(--black);
+
+  --bg-body: #f5f0e8;
+  --text-body: #0a0a0a;
+
+  --white-60: color-mix(in srgb, var(--white) 60%, transparent);
+  --white-40: color-mix(in srgb, var(--white) 40%, transparent);
+  --white-30: color-mix(in srgb, var(--white) 30%, transparent);
+  --white-25: color-mix(in srgb, var(--white) 25%, transparent);
+  --white-15: color-mix(in srgb, var(--white) 15%, transparent);
+  --white-08: color-mix(in srgb, var(--white) 8%, transparent);
+  --white-06: color-mix(in srgb, var(--white) 6%, transparent);
+  --white-05: color-mix(in srgb, var(--white) 5%, transparent);
+}
+
+[data-theme="dark"] {
+  --bg-body: #222222;
+  --text-body: #f5f0e8;
 }
 
 html {
@@ -28,8 +45,8 @@ html {
 }
 
 body {
-  background: var(--white);
-  color: var(--black);
+  background: var(--bg-body);
+  color: var(--text-body);
   font-family: 'Space Mono', monospace;
   cursor: crosshair;
   overflow-x: hidden;
@@ -207,6 +224,7 @@ body {
 /* ── POST CARD ── */
 .post-card {
   background: var(--white);
+  color: var(--black);
   border: var(--border-thick);
   border-radius: 0 !important;
   box-shadow: var(--shadow-lg);
@@ -243,6 +261,7 @@ body {
 
 .glass-card {
   background: var(--white);
+  color: var(--black);
   border: var(--border-thick);
   border-radius: 0 !important;
   box-shadow: var(--shadow);

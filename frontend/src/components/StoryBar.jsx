@@ -284,9 +284,13 @@ const StoryUploadModal = ({ onClose, onUploaded }) => {
                             border: 'var(--border)', overflow: 'hidden',
                             boxShadow: '4px 4px 0 var(--black)',
                         }}>
-                            <img src={preview} alt="Preview" style={{
-                                width: '100%', maxHeight: '350px', objectFit: 'cover', display: 'block',
-                            }} />
+                            {file?.type.startsWith('video/') ? (
+                                <video src={preview} controls style={{ width: '100%', maxHeight: '350px', objectFit: 'cover', display: 'block' }} />
+                            ) : (
+                                <img src={preview} alt="Preview" style={{
+                                    width: '100%', maxHeight: '350px', objectFit: 'cover', display: 'block',
+                                }} />
+                            )}
                             <button onClick={() => { setFile(null); setPreview(null); }} style={{
                                 position: 'absolute', top: '8px', right: '8px',
                                 background: 'var(--black)', color: 'var(--yellow)',
@@ -314,12 +318,12 @@ const StoryUploadModal = ({ onClose, onUploaded }) => {
                                 letterSpacing: '2px', textTransform: 'uppercase',
                                 fontFamily: "'Space Mono', monospace",
                             }}>
-                                CHOOSE IMAGE
+                                CHOOSE MEDIA
                             </span>
                         </button>
                     )}
 
-                    <input ref={fileRef} type="file" accept="image/*" onChange={handleFile}
+                    <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleFile}
                         style={{ display: 'none' }} />
 
                     <input value={caption} onChange={e => setCaption(e.target.value)}

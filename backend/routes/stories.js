@@ -128,27 +128,40 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     const { caption } = req.body;
 
     if (!req.file) {
-        return res.status(400).json({ error: 'Image is required' });
+        return res.status(400).json({ error: 'Media file is required' });
     }
 
     const fileExt = req.file.mimetype.split('/')[1];
-    const fileName = `story-${req.user.id}-${Date.now()}.${fileExt}`;
+    const isVideo = req.file.mimetype.startsWith('video/');
+    let imageUrl = '';
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabase.storage
-        .from('stories')
-        .upload(fileName, req.file.buffer, {
-            contentType: req.file.mimetype,
-            upsert: false,
-        });
+    if (isVideo) {
+        try {
+            const { uploadToCloudinary } = require('../cloudinary');
+            const result = await uploadToCloudinary(req.file.buffer, 'video', 'stories');
+            imageUrl = result.secure_url;
+        } catch (uploadError) {
+            console.error('Video upload error:', uploadError);
+            return res.status(500).json({ error: 'Failed to upload video story' });
+        }
+    } else {
+        const fileName = `story-${req.user.id}-${Date.now()}.${fileExt}`;
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+            .from('stories')
+            .upload(fileName, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: false,
+            });
 
-    if (uploadError) {
-        console.error('Story upload error:', uploadError);
-        return res.status(500).json({ error: 'Failed to upload story image' });
+        if (uploadError) {
+            console.error('Story upload error:', uploadError);
+            return res.status(500).json({ error: 'Failed to upload story image' });
+        }
+
+        const { data: urlData } = supabase.storage.from('stories').getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
     }
-
-    const { data: urlData } = supabase.storage.from('stories').getPublicUrl(fileName);
-    const imageUrl = urlData.publicUrl;
 
     // Save to database
     const { data: story, error } = await supabase

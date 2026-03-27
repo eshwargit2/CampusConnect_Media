@@ -197,7 +197,7 @@ const Profile = () => {
         <div className="page-container">
             {/* Profile card */}
             <div style={{
-                background: 'var(--white)', border: 'var(--border-thick)',
+                background: 'var(--white)', color: 'var(--black)', border: 'var(--border-thick)',
                 boxShadow: 'var(--shadow-lg)', marginBottom: '32px',
             }} className="animate-fade-in-up">
 
@@ -427,7 +427,7 @@ const Profile = () => {
 
             {/* Posts section */}
             {profileData.is_private && !isOwner && followStatus !== 'accepted' ? (
-                <div style={{ padding: '60px 24px', textAlign: 'center', margin: '24px 0', border: 'var(--border-thick)', boxShadow: 'var(--shadow-lg)', background: 'var(--white)' }}>
+                <div style={{ padding: '60px 24px', textAlign: 'center', margin: '24px 0', border: 'var(--border-thick)', boxShadow: 'var(--shadow-lg)', background: 'var(--white)', color: 'var(--black)' }}>
                     <div style={{ width: '56px', height: '56px', background: 'var(--yellow)', border: '3px solid var(--black)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '4px 4px 0 var(--black)' }}>
                         <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '24px', fontWeight: '700' }}>🔒</span>
                     </div>
@@ -437,7 +437,7 @@ const Profile = () => {
                     </p>
                 </div>
             ) : (
-            <div style={{ border: 'var(--border-thick)', boxShadow: 'var(--shadow-lg)', background: 'var(--white)' }}>
+            <div style={{ border: 'var(--border-thick)', boxShadow: 'var(--shadow-lg)', background: 'var(--white)', color: 'var(--black)' }}>
                 {/* Posts header with view toggle */}
                 <div style={{
                     background: 'var(--black)', padding: '12px 20px',
@@ -535,7 +535,7 @@ const Profile = () => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
                 }} onClick={e => e.target === e.currentTarget && setFollowModal(null)}>
                     <div className="animate-scale-in" style={{
-                        background: 'var(--white)', maxWidth: '420px', width: '100%',
+                        background: 'var(--white)', color: 'var(--black)', maxWidth: '420px', width: '100%',
                         maxHeight: '80vh', display: 'flex', flexDirection: 'column',
                         border: 'var(--border-thick)', boxShadow: '12px 12px 0 var(--yellow)',
                         overflow: 'hidden',
@@ -623,7 +623,7 @@ const Profile = () => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
                 }} onClick={e => e.target === e.currentTarget && setShowSettingsModal(false)}>
                     <div className="animate-scale-in" style={{
-                        background: 'var(--white)', maxWidth: '420px', width: '100%',
+                        background: 'var(--white)', color: 'var(--black)', maxWidth: '420px', width: '100%',
                         maxHeight: '90vh', display: 'flex', flexDirection: 'column',
                         border: 'var(--border-thick)', boxShadow: '12px 12px 0 var(--yellow)',
                         overflow: 'hidden',

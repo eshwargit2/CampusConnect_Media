@@ -16,12 +16,12 @@ const UploadPost = ({ onClose, onPostCreated }) => {
     }, []);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop, accept: { 'image/*': [] }, maxFiles: 1, disabled: loading,
+        onDrop, accept: { 'image/*': [], 'video/*': [] }, maxFiles: 1, disabled: loading,
     });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!file) return toast.error('SELECT AN IMAGE FIRST');
+        if (!file) return toast.error('SELECT MEDIA FIRST');
         if (!caption.trim()) return toast.error('CAPTION REQUIRED');
         setLoading(true);
         try {
@@ -93,12 +93,16 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                                 {isDragActive ? 'DROP IT HERE' : 'DRAG & DROP OR CLICK'}
                             </p>
                             <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
-                                PNG · JPG · GIF — MAX 10MB
+                                PNG · JPG · GIF · MP4 — MAX 10MB
                             </p>
                         </div>
                     ) : (
                         <div style={{ position: 'relative', border: 'var(--border-thick)' }}>
-                            <img src={preview} alt="Preview" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', display: 'block' }} />
+                            {file?.type.startsWith('video/') ? (
+                                <video src={preview} controls style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', display: 'block' }} />
+                            ) : (
+                                <img src={preview} alt="Preview" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', display: 'block' }} />
+                            )}
                             <button type="button" onClick={() => { setFile(null); setPreview(null); }} style={{
                                 position: 'absolute', top: '10px', right: '10px',
                                 background: 'var(--black)', border: '2px solid var(--white)',
@@ -113,7 +117,7 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                                 background: 'var(--yellow)', padding: '4px 10px',
                                 fontSize: '9px', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase',
                                 borderTop: '2px solid var(--black)', borderRight: '2px solid var(--black)',
-                            }}>IMAGE READY</div>
+                            }}>MEDIA READY</div>
                         </div>
                     )}
 

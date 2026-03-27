@@ -238,12 +238,21 @@ const PostCard = ({ post, onDelete }) => {
                 )}
             </div>
 
-            {/* Image */}
+            {/* Media */}
             <div style={{ position: 'relative', borderBottom: '3px solid var(--black)' }}>
-                <img src={post.image_url} alt={post.caption}
-                    style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }}
-                    onClick={() => setShowImageModal(true)}
-                    onDoubleClick={handleLike} loading="lazy" />
+                {post.image_url?.includes('/video/') ? (
+                    <video src={post.image_url} controls loop
+                        style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }}
+                        onClick={(e) => {
+                            if (e.detail === 2) handleLike(); // handle double click on video
+                        }}
+                    />
+                ) : (
+                    <img src={post.image_url} alt={post.caption}
+                        style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }}
+                        onClick={() => setShowImageModal(true)}
+                        onDoubleClick={handleLike} loading="lazy" />
+                )}
             </div>
 
             {/* Actions row */}
@@ -524,20 +533,37 @@ const PostCard = ({ post, onDelete }) => {
                         background: '#000',
                     }}
                 >
-                    <img
-                        onClick={() => setShowImageModal(false)}
-                        src={post.image_url}
-                        alt={post.caption}
-                        style={{
-                            position: 'fixed',
-                            inset: 0,
-                            width: '100vw',
-                            height: '100vh',
-                            objectFit: 'contain',
-                            display: 'block',
-                            cursor: 'zoom-out',
-                        }}
-                    />
+                    {post.image_url?.includes('/video/') ? (
+                        <video
+                            onClick={(e) => e.stopPropagation()}
+                            src={post.image_url}
+                            controls autoPlay
+                            style={{
+                                position: 'fixed',
+                                inset: 0,
+                                width: '100vw',
+                                height: '100vh',
+                                objectFit: 'contain',
+                                display: 'block',
+                                zIndex: 10001
+                            }}
+                        />
+                    ) : (
+                        <img
+                            onClick={() => setShowImageModal(false)}
+                            src={post.image_url}
+                            alt={post.caption}
+                            style={{
+                                position: 'fixed',
+                                inset: 0,
+                                width: '100vw',
+                                height: '100vh',
+                                objectFit: 'contain',
+                                display: 'block',
+                                cursor: 'zoom-out',
+                            }}
+                        />
+                    )}
                 </div>,
                 document.body
             )}

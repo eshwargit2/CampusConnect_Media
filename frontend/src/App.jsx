@@ -135,27 +135,27 @@ const AppContent = () => {
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#0a0a0a',
-            color: '#f5f0e8',
-            border: '3px solid #FFE000',
+            background: 'var(--black)',
+            color: 'var(--white)',
+            border: '3px solid var(--yellow)',
             borderRadius: '0px',
             fontSize: '12px',
             fontFamily: "'Space Mono', monospace",
             fontWeight: '700',
             letterSpacing: '1px',
             textTransform: 'uppercase',
-            boxShadow: '6px 6px 0 #FFE000',
+            boxShadow: 'var(--shadow)',
           },
           success: {
-            iconTheme: { primary: '#00FF88', secondary: '#0a0a0a' },
+            iconTheme: { primary: 'var(--green)', secondary: 'var(--black)' },
           },
           error: {
-            iconTheme: { primary: '#FF2D2D', secondary: '#0a0a0a' },
+            iconTheme: { primary: 'var(--red)', secondary: 'var(--black)' },
             style: {
-              background: '#FF2D2D',
-              color: '#f5f0e8',
-              border: '3px solid #0a0a0a',
-              boxShadow: '6px 6px 0 #0a0a0a',
+              background: 'var(--red)',
+              color: 'var(--white)',
+              border: '3px solid var(--black)',
+              boxShadow: '6px 6px 0 var(--black)',
             },
           },
         }}

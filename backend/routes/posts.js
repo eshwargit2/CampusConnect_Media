@@ -10,10 +10,10 @@ const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
             cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed'), false);
+            cb(new Error('Only image/video files are allowed'), false);
         }
     },
 });
@@ -118,7 +118,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     const { caption } = req.body;
 
     if (!req.file) {
-        return res.status(400).json({ error: 'Image is required' });
+        return res.status(400).json({ error: 'Media file is required' });
     }
 
     if (!caption || caption.trim() === '') {
@@ -126,23 +126,37 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     }
 
     const fileExt = req.file.mimetype.split('/')[1];
-    const fileName = `post-${req.user.id}-${Date.now()}.${fileExt}`;
+    const isVideo = req.file.mimetype.startsWith('video/');
+    let imageUrl = '';
 
-    // Upload image to Supabase Storage
-    const { error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(fileName, req.file.buffer, {
-            contentType: req.file.mimetype,
-            upsert: false,
-        });
+    if (isVideo) {
+        try {
+            const { uploadToCloudinary } = require('../cloudinary');
+            const result = await uploadToCloudinary(req.file.buffer, 'video', 'posts');
+            imageUrl = result.secure_url;
+        } catch (uploadError) {
+            console.error('Video upload error:', uploadError);
+            return res.status(500).json({ error: 'Failed to upload video' });
+        }
+    } else {
+        const fileName = `post-${req.user.id}-${Date.now()}.${fileExt}`;
 
-    if (uploadError) {
-        console.error('Image upload error:', uploadError);
-        return res.status(500).json({ error: 'Failed to upload image' });
+        // Upload image to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+            .from('posts')
+            .upload(fileName, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: false,
+            });
+
+        if (uploadError) {
+            console.error('Image upload error:', uploadError);
+            return res.status(500).json({ error: 'Failed to upload image' });
+        }
+
+        const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
     }
-
-    const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
-    const imageUrl = urlData.publicUrl;
 
     // Save post to database
     const { data: post, error } = await supabase

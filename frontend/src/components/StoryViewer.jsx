@@ -438,24 +438,44 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                     </div>
                 </div>
 
-                {/* Story image */}
+                {/* Story Media */}
                 <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
-                    <img
-                        src={currentStory.image_url}
-                        alt={currentStory.caption || 'Story'}
-                        onLoad={handleStoryImageLoad}
-                        onError={() => setMediaLoaded(true)}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: storyImageFit,
-                            objectPosition: 'center',
-                            display: 'block',
-                            opacity: mediaVisible ? 1 : 0,
-                            transition: 'opacity 0.2s ease',
-                        }}
-                        draggable={false}
-                    />
+                    {currentStory.image_url?.includes('/video/') ? (
+                        <video
+                            src={currentStory.image_url}
+                            onLoadedData={handleStoryImageLoad}
+                            onError={() => setMediaLoaded(true)}
+                            autoPlay
+                            controls={false}
+                            playsInline
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: storyImageFit,
+                                objectPosition: 'center',
+                                display: 'block',
+                                opacity: mediaVisible ? 1 : 0,
+                                transition: 'opacity 0.2s ease',
+                            }}
+                        />
+                    ) : (
+                        <img
+                            src={currentStory.image_url}
+                            alt={currentStory.caption || 'Story'}
+                            onLoad={handleStoryImageLoad}
+                            onError={() => setMediaLoaded(true)}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: storyImageFit,
+                                objectPosition: 'center',
+                                display: 'block',
+                                opacity: mediaVisible ? 1 : 0,
+                                transition: 'opacity 0.2s ease',
+                            }}
+                            draggable={false}
+                        />
+                    )}
 
                     {!mediaVisible && (
                         <div style={{
