@@ -123,44 +123,59 @@ router.get('/', async (req, res) => {
     res.json({ storyGroups: grouped });
 });
 
+// GET /api/stories/cloudinary-signature - Get signature for direct frontend upload
+router.get('/cloudinary-signature', authMiddleware, (req, res) => {
+    try {
+        const { generateSignature } = require('../cloudinary');
+        const signData = generateSignature('stories');
+        res.json(signData);
+    } catch (err) {
+        console.error('Signature error:', err);
+        res.status(500).json({ error: 'Failed to generate signature' });
+    }
+});
+
 // ─── POST /api/stories — Upload a new story ──────────────────────────
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
-    const { caption } = req.body;
+    const { caption, videoUrl } = req.body;
 
-    if (!req.file) {
-        return res.status(400).json({ error: 'Media file is required' });
+    if (!req.file && !videoUrl) {
+        return res.status(400).json({ error: 'Media file or video URL is required' });
     }
 
-    const fileExt = req.file.mimetype.split('/')[1];
-    const isVideo = req.file.mimetype.startsWith('video/');
-    let imageUrl = '';
+    let imageUrl = videoUrl || '';
 
-    if (isVideo) {
-        try {
-            const { uploadToCloudinary } = require('../cloudinary');
-            const result = await uploadToCloudinary(req.file.buffer, 'video', 'stories');
-            imageUrl = result.secure_url;
-        } catch (uploadError) {
-            console.error('Video upload error:', uploadError);
-            return res.status(500).json({ error: 'Failed to upload video story' });
+    if (!videoUrl) {
+        const fileExt = req.file.mimetype.split('/')[1];
+        const isVideo = req.file.mimetype.startsWith('video/');
+
+        if (isVideo) {
+            try {
+                const { uploadToCloudinary } = require('../cloudinary');
+                const result = await uploadToCloudinary(req.file.buffer, 'video', 'stories');
+                imageUrl = result.secure_url;
+            } catch (uploadError) {
+                console.error('Video upload error:', uploadError);
+                return res.status(500).json({ error: 'Failed to upload video story' });
+            }
+        } else {
+            const fileName = `story-${req.user.id}-${Date.now()}.${fileExt}`;
+            // Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('stories')
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false,
+                });
+
+            if (uploadError) {
+                console.error('Story upload error:', uploadError);
+                return res.status(500).json({ error: 'Failed to upload story image' });
+            }
+
+            const { data: urlData } = supabase.storage.from('stories').getPublicUrl(fileName);
+            imageUrl = urlData.publicUrl;
         }
-    } else {
-        const fileName = `story-${req.user.id}-${Date.now()}.${fileExt}`;
-        // Upload to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-            .from('stories')
-            .upload(fileName, req.file.buffer, {
-                contentType: req.file.mimetype,
-                upsert: false,
-            });
-
-        if (uploadError) {
-            console.error('Story upload error:', uploadError);
-            return res.status(500).json({ error: 'Failed to upload story image' });
-        }
-
-        const { data: urlData } = supabase.storage.from('stories').getPublicUrl(fileName);
-        imageUrl = urlData.publicUrl;
     }
 
     // Save to database

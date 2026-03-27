@@ -25,9 +25,37 @@ const UploadPost = ({ onClose, onPostCreated }) => {
         if (!caption.trim()) return toast.error('CAPTION REQUIRED');
         setLoading(true);
         try {
+            const isVideo = file.type.startsWith('video/');
+            let videoUrl = null;
+
+            if (isVideo) {
+                const { data: signData } = await api.get('/posts/cloudinary-signature');
+                const { signature, timestamp, apiKey, cloudName } = signData;
+
+                const cloudFormData = new FormData();
+                cloudFormData.append('file', file);
+                cloudFormData.append('api_key', apiKey);
+                cloudFormData.append('timestamp', timestamp);
+                cloudFormData.append('signature', signature);
+                cloudFormData.append('folder', 'posts');
+
+                const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+                    method: 'POST', body: cloudFormData
+                });
+                if (!cloudRes.ok) throw new Error('Cloudinary upload failed');
+                
+                const cloudJson = await cloudRes.json();
+                videoUrl = cloudJson.secure_url;
+            }
+
             const formData = new FormData();
-            formData.append('image', file);
+            if (videoUrl) {
+                formData.append('videoUrl', videoUrl);
+            } else {
+                formData.append('image', file);
+            }
             formData.append('caption', caption.trim());
+            
             const { data } = await api.post('/posts', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
             toast.success('POST SHARED ✦');
             onPostCreated(data.post); onClose();
