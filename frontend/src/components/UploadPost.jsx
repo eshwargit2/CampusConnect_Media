@@ -93,7 +93,7 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                                 {isDragActive ? 'DROP IT HERE' : 'DRAG & DROP OR CLICK'}
                             </p>
                             <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
-                                PNG · JPG · GIF · MP4 — MAX 10MB
+                                PNG · JPG · GIF · MP4 — MAX 200MB
                             </p>
                         </div>
                     ) : (
