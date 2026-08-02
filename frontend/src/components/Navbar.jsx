@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, PlusSquare, User, LogOut, GraduationCap, Menu, X, Search, MessageSquare, Sun, Moon } from 'lucide-react';
+import { Home, PlusCircle, User, LogOut, GraduationCap, Menu, X, Search, MessageCircle, Sun, Moon } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import api from '../lib/api';
 import { supabase } from '../lib/supabaseClient';
@@ -14,6 +14,26 @@ const Navbar = ({ onUploadClick }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+    // Hide navbar on scroll down, show on scroll up
+    const [visible, setVisible] = useState(true);
+    const prevScrollY = useRef(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY <= 20) {
+                setVisible(true);
+            } else if (currentScrollY > prevScrollY.current + 5) {
+                setVisible(false); // scrolling down
+            } else if (currentScrollY < prevScrollY.current - 5) {
+                setVisible(true); // scrolling up
+            }
+            prevScrollY.current = currentScrollY;
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -140,7 +160,10 @@ const Navbar = ({ onUploadClick }) => {
 
     return (
         <>
-            <nav className="navbar">
+            <nav className="navbar" style={{
+                transform: visible ? 'translateY(0)' : 'translateY(-100px)',
+                transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}>
                 <div style={{
                     maxWidth: isMobile ? '100%' : '1100px',
                     margin: '0 auto', padding: '0 20px',
@@ -168,13 +191,13 @@ const Navbar = ({ onUploadClick }) => {
                     {user && !isMobile && (
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <DesktopLink to="/" active={isActive('/')} label="FEED" icon={<Home size={14} />} />
-                            <DesktopLink
+                             <DesktopLink
                                 to="/messages"
                                 active={location.pathname.startsWith('/messages')}
                                 label="MESSAGES"
                                 icon={
                                     <span style={{ position: 'relative', display: 'flex' }}>
-                                        <MessageSquare size={14} />
+                                        <MessageCircle size={14} />
                                         {unreadCount > 0 && (
                                             <span style={{
                                                 position: 'absolute', top: '-6px', right: '-8px',
@@ -223,7 +246,7 @@ const Navbar = ({ onUploadClick }) => {
                                 padding: '8px 16px !important', fontSize: '12px',
                                 margin: '0 4px',
                             }}>
-                                <PlusSquare size={14} /> POST
+                                <PlusCircle size={14} /> POST
                             </button>
                             <DesktopLink
                                 to={`/profile/${user.username}`}
@@ -253,38 +276,43 @@ const Navbar = ({ onUploadClick }) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {/* Theme map */}
                             <button onClick={toggleTheme} style={{
-                                background: 'none',
-                                border: '2px solid var(--white-30)',
-                                color: 'var(--white)',
+                                background: 'transparent',
+                                border: '1px solid var(--border-color)',
+                                color: 'var(--black)',
                                 width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', flexShrink: 0,
+                                cursor: 'pointer', flexShrink: 0, borderRadius: '10px',
+                                boxShadow: 'var(--clay-btn-shadow)',
                             }}>
                                 {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
                             </button>
                             {/* Search button */}
                             <button onClick={openSearch} style={{
-                                background: searchOpen ? 'var(--yellow)' : 'none',
-                                border: '2px solid ' + (searchOpen ? 'var(--yellow)' : 'var(--white-30)'),
-                                color: searchOpen ? 'var(--black)' : 'var(--white)',
+                                background: searchOpen ? 'var(--yellow)' : 'transparent',
+                                border: searchOpen ? '1px solid var(--yellow)' : '1px solid var(--border-color)',
+                                color: searchOpen ? '#ffffff' : 'var(--black)',
                                 width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', flexShrink: 0,
+                                cursor: 'pointer', flexShrink: 0, borderRadius: '10px',
+                                boxShadow: searchOpen ? 'none' : 'var(--clay-btn-shadow)',
                             }}>
                                 <Search size={18} />
                             </button>
                             {/* Quick post button */}
                             <button onClick={onUploadClick} style={{
-                                background: 'var(--yellow)', border: '2px solid var(--yellow)',
+                                background: 'var(--yellow)', border: 'none',
+                                color: '#ffffff',
                                 width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', flexShrink: 0,
+                                cursor: 'pointer', flexShrink: 0, borderRadius: '10px',
+                                boxShadow: 'var(--clay-btn-shadow)',
                             }}>
-                                <PlusSquare size={18} color="var(--black)" />
+                                <PlusCircle size={18} />
                             </button>
                             {/* Hamburger */}
                             <button onClick={() => setMenuOpen(!menuOpen)} style={{
-                                background: 'none', border: '2px solid var(--white-30)',
-                                color: 'var(--white)', cursor: 'pointer',
+                                background: 'transparent', border: '1px solid var(--border-color)',
+                                color: 'var(--black)', cursor: 'pointer',
                                 width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0,
+                                flexShrink: 0, borderRadius: '10px',
+                                boxShadow: 'var(--clay-btn-shadow)',
                             }}>
                                 {menuOpen ? <X size={18} /> : <Menu size={18} />}
                             </button>
@@ -514,7 +542,7 @@ const Navbar = ({ onUploadClick }) => {
                             className={`mobile-menu-link${location.pathname.startsWith('/messages') ? ' active' : ''}`}
                             onClick={closeMenu}>
                             <span style={{ position: 'relative', display: 'inline-flex' }}>
-                                <MessageSquare size={20} />
+                                <MessageCircle size={20} />
                                 {unreadCount > 0 && (
                                     <span style={{
                                         position: 'absolute', top: '-4px', right: '-8px',

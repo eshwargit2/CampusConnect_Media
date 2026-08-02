@@ -87,7 +87,22 @@ const Feed = ({ newPost }) => {
             {/* Ticker */}
             <div className="ticker-bar" style={{ border: 'var(--border)', marginBottom: '32px' }}>
                 <div className="ticker-track">
-                    {['LATEST POSTS', 'COLLEGE NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS', 'LATEST POSTS', 'COLLEGE NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS'].map((t, i) => (
+                    {[
+                        "🚨 ZERO-DAY EXPLOIT FOUND IN CAMPUS CHAT! UPDATE CLIENT IMMEDIATELY!",
+                        "🛡️ TIP: '123456' IS NOT A PASSWORD. 'PASSWORD123456' IS ALSO NOT A PASSWORD.",
+                        "💻 SEC NEWS: 99% OF HACKERS PREFER HOT COFFEE AND DARK TERMINALS.",
+                        "⚠️ PHISHING ATTACK: THAT EMAIL FROM 'THE DEAN' INVITING YOU TO A 'SECRET PIZZA PARTY' IS A TRAP!",
+                        "🔍 PORT SCAN DETECTED: SOMEONE IN DORM B IS PORT SCANNING THE TOASTER AGAIN.",
+                        "🔐 MEME: THERE ARE 10 TYPES OF PEOPLE: THOSE WHO UNDERSTAND BINARY, AND THOSE WHO GET SHADOWBANNED FOR FAILING CAPTCHAS.",
+                        "🤖 BREACH ALERT: ESPRESSO MACHINE DATABASE LEAKED. DECAF USERS EXPOSED!",
+                        "🔒 PROTOCOL UPDATE: ROT13 NO LONGER CONSIDERED A MILITARY-GRADE STANDARD.",
+                        "🔥 HOT TOPIC: DEVELOPER ACCIDENTALLY PUSHES PRODUCTION SUPABASE CREDENTIALS TO A PUBLIC TIKTOK VIDEO.",
+                        "🚨 ZERO-DAY EXPLOIT FOUND IN CAMPUS CHAT! UPDATE CLIENT IMMEDIATELY!",
+                        "🛡️ TIP: '123456' IS NOT A PASSWORD. 'PASSWORD123456' IS ALSO NOT A PASSWORD.",
+                        "💻 SEC NEWS: 99% OF HACKERS PREFER HOT COFFEE AND DARK TERMINALS.",
+                        "⚠️ PHISHING ATTACK: THAT EMAIL FROM 'THE DEAN' INVITING YOU TO A 'SECRET PIZZA PARTY' IS A TRAP!",
+                        "🔍 PORT SCAN DETECTED: SOMEONE IN DORM B IS PORT SCANNING THE TOASTER AGAIN."
+                    ].map((t, i) => (
                         <span key={i} className="ticker-item">{t}</span>
                     ))}
                 </div>
