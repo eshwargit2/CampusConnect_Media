@@ -154,20 +154,20 @@ const PostCard = ({ post, onDelete }) => {
         <article className="post-card animate-fade-in-up">
             {/* Tag bar */}
             <div style={{
-                background: 'var(--black)', padding: '6px 16px',
+                background: 'var(--primary-tint)', padding: '8px 18px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                borderBottom: '3px solid var(--black)',
+                borderBottom: '1px solid var(--border-color)',
             }}>
-                <span style={{ fontSize: '9px', letterSpacing: '3px', color: 'var(--yellow)', textTransform: 'uppercase', fontWeight: '700' }}>
+                <span style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'var(--yellow)', textTransform: 'uppercase', fontWeight: '700', fontFamily: "'Outfit', sans-serif" }}>
                     ■ POST
                 </span>
-                <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '9px', letterSpacing: '1px', color: 'var(--text-muted)', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                     {timeAgo}
                 </span>
             </div>
 
             {/* Header */}
-            <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '3px solid var(--black)' }}>
+            <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)' }}>
                 <Link to={`/profile/${postUser.username}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                         {postUser.profile_image
@@ -177,10 +177,10 @@ const PostCard = ({ post, onDelete }) => {
                         <OnlineDot userId={postUser.id} size={10} />
                     </div>
                     <div>
-                        <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '15px', color: 'var(--black)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '15px', color: 'var(--black)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             {postUser.username}
                         </p>
-                        <p style={{ fontSize: '9px', letterSpacing: '2px', color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>
+                        <p style={{ fontSize: '9px', letterSpacing: '1.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                             COLLEGE MEMBER
                         </p>
                     </div>
@@ -189,32 +189,36 @@ const PostCard = ({ post, onDelete }) => {
                 {isOwner && (
                     <div style={{ position: 'relative' }}>
                         <button onClick={() => setShowMenu(!showMenu)} style={{
-                            background: 'none', border: '3px solid var(--black)', cursor: 'pointer',
+                            background: 'none', border: '1px solid var(--border-color)', cursor: 'pointer',
                             padding: '4px 8px', width: '36px', height: '36px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'background 0.15s',
+                            borderRadius: '12px', boxShadow: 'var(--clay-btn-shadow)',
+                            color: 'var(--black)',
+                            transition: 'all 0.15s',
                         }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--black)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-tint)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
                         >
                             <MoreHorizontal size={18} />
                         </button>
                         {showMenu && (
                             <div className="animate-scale-in" style={{
                                 position: 'absolute', right: 0, top: '42px',
-                                background: 'var(--white)', border: '3px solid var(--black)',
-                                boxShadow: 'var(--shadow)', zIndex: 10, minWidth: '160px',
+                                background: 'var(--white)', border: '1px solid var(--border-color)',
+                                borderRadius: '16px',
+                                boxShadow: 'var(--shadow-lg)', zIndex: 10, minWidth: '160px',
+                                overflow: 'hidden',
                             }}>
                                 <button onClick={() => { setIsEditing(true); setEditCaptionText(captionText); setShowMenu(false); }} style={{
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                     padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer',
-                                    borderBottom: '2px solid var(--black)',
-                                    width: '100%', textAlign: 'left', fontSize: '11px', fontWeight: '700',
-                                    letterSpacing: '2px', textTransform: 'uppercase',
-                                    fontFamily: "'Space Mono', monospace",
+                                    borderBottom: '1px solid var(--border-color)',
+                                    width: '100%', textAlign: 'left', fontSize: '11px', fontWeight: '600',
+                                    letterSpacing: '1px', textTransform: 'uppercase',
+                                    fontFamily: "'Outfit', sans-serif",
                                     color: 'var(--black)', transition: 'background 0.15s',
                                 }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,224,0,0.5)'}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-tint)'}
                                     onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
                                 >
                                     <Edit2 size={13} /> EDIT POST
@@ -222,12 +226,12 @@ const PostCard = ({ post, onDelete }) => {
                                 <button onClick={() => { setShowDeleteModal(true); setShowMenu(false); }} style={{
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                     padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer',
-                                    width: '100%', textAlign: 'left', fontSize: '11px', fontWeight: '700',
-                                    letterSpacing: '2px', textTransform: 'uppercase',
-                                    fontFamily: "'Space Mono', monospace",
+                                    width: '100%', textAlign: 'left', fontSize: '11px', fontWeight: '600',
+                                    letterSpacing: '1px', textTransform: 'uppercase',
+                                    fontFamily: "'Outfit', sans-serif",
                                     color: 'var(--red)', transition: 'background 0.15s',
                                 }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--red)'}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--danger-tint)'}
                                     onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--red)'; }}
                                 >
                                     <Trash2 size={13} /> DELETE POST
@@ -239,7 +243,7 @@ const PostCard = ({ post, onDelete }) => {
             </div>
 
             {/* Media */}
-            <div style={{ position: 'relative', borderBottom: '3px solid var(--black)' }}>
+            <div style={{ position: 'relative', borderBottom: '1px solid var(--border-color)' }}>
                 {post.image_url?.includes('/video/') ? (
                     <video src={post.image_url} controls loop
                         style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }}
@@ -256,35 +260,35 @@ const PostCard = ({ post, onDelete }) => {
             </div>
 
             {/* Actions row */}
-            <div style={{ display: 'flex', borderBottom: '3px solid var(--black)' }}>
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)' }}>
                 <button onClick={handleLike} style={{
-                    flex: 1, padding: '14px 20px', background: liked ? 'var(--black)' : 'var(--white)',
-                    border: 'none', borderRight: '3px solid var(--black)',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-                    fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: '700',
-                    letterSpacing: '2px', textTransform: 'uppercase',
-                    color: liked ? 'var(--yellow)' : 'var(--black)',
+                    flex: 1, padding: '14px 20px', background: liked ? 'var(--danger-tint)' : 'transparent',
+                    border: 'none', borderRight: '1px solid var(--border-color)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '600',
+                    letterSpacing: '1px', textTransform: 'uppercase',
+                    color: liked ? 'var(--red)' : 'var(--black)',
                     transition: 'all 0.15s',
                 }}>
                     <Heart size={18} className={likeAnimate ? 'heart-animate' : ''}
-                        fill={liked ? 'currentColor' : 'none'} />
+                        fill={liked ? 'currentColor' : 'none'} color={liked ? 'var(--red)' : 'currentColor'} />
                     {postUser.hide_likes && !isOwner ? '' : likesCount} {liked ? 'LIKED' : 'LIKE'}
                 </button>
 
                 <button onClick={toggleComments} style={{
-                    flex: 1, padding: '14px 20px', background: showComments ? 'var(--yellow)' : 'var(--white)',
+                    flex: 1, padding: '14px 20px', background: showComments ? 'var(--primary-tint)' : 'transparent',
                     border: 'none', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: '700',
-                    letterSpacing: '2px', textTransform: 'uppercase',
-                    color: 'var(--black)', transition: 'all 0.15s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '600',
+                    letterSpacing: '1px', textTransform: 'uppercase',
+                    color: showComments ? 'var(--yellow)' : 'var(--black)', transition: 'all 0.15s',
                 }}>
-                    <MessageCircle size={18} /> {commentsCount} COMMENTS
+                    <MessageCircle size={18} color={showComments ? 'var(--yellow)' : 'currentColor'} /> {commentsCount} COMMENTS
                 </button>
             </div>
 
             {/* Caption & Metadata */}
-            <div style={{ padding: '16px 20px', borderBottom: showComments ? '3px solid var(--black)' : 'none', background: 'var(--white)' }}>
+            <div style={{ padding: '16px 20px', borderBottom: showComments ? '1px solid var(--border-color)' : 'none', background: 'var(--white)' }}>
                 {likesCount > 0 && (!postUser.hide_likes || isOwner) && (
                     <div style={{ marginBottom: captionText ? '8px' : '0px' ,textDecorationLine:'underline'}}>
                         <button onClick={openLikers} style={{
@@ -305,23 +309,27 @@ const PostCard = ({ post, onDelete }) => {
                             value={editCaptionText}
                             onChange={(e) => setEditCaptionText(e.target.value)}
                             style={{
-                                width: '100%', padding: '10px', fontSize: '13px',
-                                fontFamily: "'Space Mono', monospace", border: '2px solid var(--black)',
-                                background: 'rgba(255,224,0,0.05)', outline: 'none', resize: 'vertical', minHeight: '60px',
+                                width: '100%', padding: '12px', fontSize: '13px',
+                                fontFamily: "'Inter', sans-serif", border: 'var(--border)',
+                                borderRadius: '12px',
+                                background: 'var(--primary-tint)', outline: 'none', resize: 'vertical', minHeight: '60px',
                                 color: 'var(--black)',
+                                boxShadow: 'var(--clay-input-shadow)',
                             }}
                             autoFocus
                         />
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                             <button onClick={() => setIsEditing(false)} disabled={isSaving} style={{
-                                background: 'none', border: '2px solid var(--black)', color: 'var(--black)',
-                                padding: '6px 12px', fontSize: '10px', fontWeight: '700', cursor: 'pointer',
-                                fontFamily: "'Space Mono', monospace", letterSpacing: '1px', textTransform: 'uppercase'
+                                background: 'none', border: '1px solid var(--border-color)', color: 'var(--black)',
+                                padding: '6px 14px', fontSize: '10px', fontWeight: '600', cursor: 'pointer',
+                                borderRadius: '10px', boxShadow: 'var(--clay-btn-shadow)',
+                                fontFamily: "'Outfit', sans-serif", letterSpacing: '1px', textTransform: 'uppercase'
                             }}>CANCEL</button>
                             <button onClick={handleEditSave} disabled={isSaving} style={{
-                                background: 'var(--yellow)', border: '2px solid var(--black)', color: 'var(--black)',
-                                padding: '6px 12px', fontSize: '10px', fontWeight: '700', cursor: 'pointer',
-                                fontFamily: "'Space Mono', monospace", letterSpacing: '1px', textTransform: 'uppercase'
+                                background: 'var(--yellow)', border: 'none', color: '#ffffff',
+                                padding: '6px 14px', fontSize: '10px', fontWeight: '600', cursor: 'pointer',
+                                borderRadius: '10px', boxShadow: 'var(--clay-btn-shadow)',
+                                fontFamily: "'Outfit', sans-serif", letterSpacing: '1px', textTransform: 'uppercase'
                             }}>{isSaving ? 'SAVING...' : 'SAVE'}</button>
                         </div>
                     </div>
@@ -329,7 +337,7 @@ const PostCard = ({ post, onDelete }) => {
                     <>
                         <p style={{ fontSize: '13px', lineHeight: '1.7', marginBottom: captionText ? '8px' : 0 }}>
                             <Link to={`/profile/${postUser.username}`} style={{
-                                fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700',
+                                fontFamily: "'Outfit', sans-serif", fontWeight: '700',
                                 color: 'var(--black)', textDecoration: 'none', textTransform: 'uppercase',
                                 marginRight: '8px', letterSpacing: '0.5px',
                             }}>
@@ -359,12 +367,12 @@ const PostCard = ({ post, onDelete }) => {
                                     border: 'none',
                                     padding: 0,
                                     cursor: 'pointer',
-                                    fontFamily: "'Space Mono', monospace",
-                                    fontSize: '10px',
-                                    fontWeight: '700',
-                                    letterSpacing: '1.5px',
+                                    fontFamily: "'Outfit', sans-serif",
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    letterSpacing: '0.5px',
                                     textTransform: 'uppercase',
-                                    color: 'rgba(10,10,10,0.6)',
+                                    color: 'var(--yellow)',
                                 }}
                             >
                                 {expandedCaption ? 'Show less' : 'Show more'}
@@ -377,43 +385,43 @@ const PostCard = ({ post, onDelete }) => {
             {/* Comments */}
             {showComments && (
                 <div className="animate-fade-in">
-                    <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px', background: '#f0ebe3' }}>
+                    <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--primary-tint)' }}>
                         {loadingComments
                             ? <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><div className="spinner" style={{ width: '28px', height: '28px' }} /></div>
                             : comments.length === 0
-                                ? <p style={{ textAlign: 'center', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', padding: '16px 0' }}>NO COMMENTS YET — BE FIRST</p>
+                                ? <p style={{ textAlign: 'center', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '16px 0', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>NO COMMENTS YET — BE FIRST</p>
                                 : comments.map(c => <Comment key={c.id} comment={c} />)
                         }
                     </div>
 
                     {user ? (
                         <form onSubmit={handleComment} style={{
-                            display: 'flex', borderTop: '3px solid var(--black)',
+                            display: 'flex', borderTop: '1px solid var(--border-color)',
                         }}>
                             <input ref={commentInputRef} value={commentText}
                                 onChange={e => setCommentText(e.target.value)}
                                 placeholder="WRITE A COMMENT..."
                                 style={{
                                     flex: 1, background: 'var(--white)', border: 'none',
-                                    padding: '14px 16px', fontFamily: "'Space Mono', monospace",
+                                    padding: '14px 16px', fontFamily: "'Inter', sans-serif",
                                     fontSize: '12px', outline: 'none', color: 'var(--black)',
                                     letterSpacing: '0.5px',
                                 }}
                                 disabled={submittingComment} />
                             <button type="submit" disabled={!commentText.trim() || submittingComment}
                                 style={{
-                                    background: commentText.trim() ? 'var(--yellow)' : '#ddd',
-                                    border: 'none', borderLeft: '3px solid var(--black)',
-                                    cursor: 'pointer', padding: '14px 20px',
+                                    background: commentText.trim() ? 'var(--primary-tint)' : 'transparent',
+                                    border: 'none', borderLeft: '1px solid var(--border-color)',
+                                    cursor: commentText.trim() ? 'pointer' : 'default', padding: '14px 20px',
                                     display: 'flex', alignItems: 'center',
-                                    transition: 'background 0.15s',
+                                    transition: 'all 0.15s',
                                 }}>
-                                <Send size={16} color="var(--black)" />
+                                <Send size={16} color={commentText.trim() ? 'var(--yellow)' : 'var(--text-muted)'} />
                             </button>
                         </form>
                     ) : (
-                        <div style={{ padding: '14px 20px', borderTop: '3px solid var(--black)', textAlign: 'center', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}>
-                            <Link to="/login" style={{ color: 'var(--black)', fontWeight: '700', textDecoration: 'underline', textDecorationThickness: '2px' }}>LOGIN</Link> TO COMMENT
+                        <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-color)', textAlign: 'center', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                            <Link to="/login" style={{ color: 'var(--yellow)', fontWeight: '700', textDecoration: 'underline', textDecorationThickness: '2px' }}>LOGIN</Link> TO COMMENT
                         </div>
                     )}
                 </div>
@@ -435,35 +443,38 @@ const PostCard = ({ post, onDelete }) => {
             {showLikesModal && (
                 <div className="animate-fade-in" style={{
                     position: 'fixed', inset: 0, zIndex: 100,
-                    background: 'rgba(10,10,10,0.9)',
+                    background: 'rgba(15,23,42,0.6)',
+                    backdropFilter: 'blur(8px)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
                 }} onClick={e => e.target === e.currentTarget && setShowLikesModal(false)}>
                     <div className="animate-scale-in" style={{
                         background: 'var(--white)', maxWidth: '420px', width: '100%',
                         maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-                        border: 'var(--border-thick)', boxShadow: '12px 12px 0 var(--yellow)',
+                        border: 'var(--border-thick)', borderRadius: '24px',
+                        boxShadow: 'var(--shadow-lg)',
                         overflow: 'hidden',
                     }}>
                         <div style={{
-                            background: 'var(--black)', padding: '14px 20px',
-                            borderBottom: '5px solid var(--yellow)',
+                            background: 'var(--primary-tint)', padding: '16px 20px',
+                            borderBottom: '1px solid var(--border-color)',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             flexShrink: 0,
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Heart size={14} fill="currentColor" color="var(--red)" />
                                 <span style={{
-                                    fontFamily: "'Space Mono', monospace", fontSize: '11px',
-                                    fontWeight: '700', letterSpacing: '3px', color: 'var(--yellow)',
+                                    fontFamily: "'Outfit', sans-serif", fontSize: '11px',
+                                    fontWeight: '700', letterSpacing: '1.5px', color: 'var(--yellow)',
                                     textTransform: 'uppercase',
                                 }}>
                                     LIKES {postUser.hide_likes && !isOwner ? '' : `— ${likesCount}`}
                                 </span>
                             </div>
                             <button onClick={() => setShowLikesModal(false)} style={{
-                                background: 'none', border: '2px solid rgba(245,240,232,0.3)',
-                                color: 'var(--white)', cursor: 'pointer',
+                                background: 'none', border: '1px solid var(--border-color)',
+                                color: 'var(--black)', cursor: 'pointer',
                                 width: '28px', height: '28px',
+                                borderRadius: '12px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
                                 <X size={13} />
@@ -477,8 +488,8 @@ const PostCard = ({ post, onDelete }) => {
                             ) : likers.length === 0 ? (
                                 <div style={{ padding: '40px', textAlign: 'center' }}>
                                     <p style={{
-                                        fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase',
-                                        color: 'rgba(10,10,10,0.4)', fontWeight: '700',
+                                        fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase',
+                                        color: 'var(--text-muted)', fontWeight: '600', fontFamily: "'Outfit', sans-serif"
                                     }}>
                                         NO LIKES YET
                                     </p>
@@ -490,11 +501,11 @@ const PostCard = ({ post, onDelete }) => {
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '14px',
                                             padding: '14px 20px', textDecoration: 'none',
-                                            borderBottom: i < likers.length - 1 ? '3px solid var(--black)' : 'none',
+                                            borderBottom: i < likers.length - 1 ? '1px solid var(--border-color)' : 'none',
                                             transition: 'background 0.15s',
                                             color: 'var(--black)',
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,224,0,0.12)'}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-tint)'}
                                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                     >
                                         {u.profile_image
@@ -503,7 +514,7 @@ const PostCard = ({ post, onDelete }) => {
                                         }
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <p style={{
-                                                fontFamily: "'Space Grotesk', sans-serif",
+                                                fontFamily: "'Outfit', sans-serif",
                                                 fontWeight: '700', fontSize: '14px',
                                                 textTransform: 'uppercase', letterSpacing: '0.5px',
                                             }}>
@@ -511,8 +522,8 @@ const PostCard = ({ post, onDelete }) => {
                                             </p>
                                         </div>
                                         <div style={{
-                                            fontSize: '9px', letterSpacing: '2px', color: 'rgba(10,10,10,0.3)',
-                                            fontWeight: '700', textTransform: 'uppercase',
+                                            fontSize: '10px', letterSpacing: '1px', color: 'var(--yellow)',
+                                            fontWeight: '600', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif"
                                         }}>VIEW →</div>
                                     </Link>
                                 ))
@@ -580,10 +591,10 @@ const Comment = ({ comment }) => {
                 ? <img src={cu.profile_image} alt={cu.username} className="avatar" style={{ width: '28px', height: '28px', flexShrink: 0 }} />
                 : <div className="avatar-text" style={{ width: '28px', height: '28px', fontSize: '11px', flexShrink: 0 }}>{cu.username?.charAt(0)}</div>
             }
-            <div style={{ background: 'var(--white)', border: '2px solid var(--black)', padding: '8px 12px', flex: 1, boxShadow: '2px 2px 0 var(--black)' }}>
+            <div style={{ background: 'var(--white)', border: 'var(--border)', padding: '10px 14px', flex: 1, borderRadius: '16px', boxShadow: 'var(--clay-btn-shadow)' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '3px' }}>
-                    <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{cu.username}</span>
-                    <span style={{ fontSize: '9px', letterSpacing: '1px', color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{timeAgo}</span>
+                    <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{cu.username}</span>
+                    <span style={{ fontSize: '9px', letterSpacing: '1px', color: 'var(--text-muted)', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>{timeAgo}</span>
                 </div>
                 <p style={{ fontSize: '12px', lineHeight: '1.6', color: 'var(--black)' }}>{comment.comment_text}</p>
             </div>

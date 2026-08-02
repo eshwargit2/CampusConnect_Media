@@ -58,33 +58,34 @@ const Feed = ({ newPost }) => {
 
             {/* Header */}
             <div style={{
-                background: 'var(--black)', padding: '24px 28px',
-                border: 'var(--border-thick)', borderBottom: '5px solid var(--yellow)',
-                boxShadow: 'var(--shadow-lg)',
+                background: 'var(--white)', padding: '24px 28px',
+                border: 'var(--border-thick)',
+                borderRadius: '24px',
+                boxShadow: 'var(--shadow)',
                 marginBottom: '32px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
                 <div>
-                    <div style={{ fontSize: '9px', letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(245,240,232,0.4)', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                         001 / GLOBAL FEED
                     </div>
                     <h1 style={{
-                        fontFamily: "'Space Grotesk', sans-serif", fontSize: '28px', fontWeight: '700',
-                        color: 'var(--white)', letterSpacing: '-1px', textTransform: 'uppercase',
+                        fontFamily: "'Outfit', sans-serif", fontSize: '28px', fontWeight: '800',
+                        color: 'var(--black)', letterSpacing: '-0.5px', textTransform: 'uppercase',
                         lineHeight: '1',
                     }}>
                         COLLEGE<span style={{ color: 'var(--yellow)' }}>FEED</span>
                     </h1>
                 </div>
                 <button onClick={() => fetchPosts(1, true)} className="btn-brand"
-                    style={{ padding: '10px 16px', fontSize: '11px' }} disabled={loading}>
+                    style={{ padding: '10px 16px !important', fontSize: '11px' }} disabled={loading}>
                     <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                     REFRESH
                 </button>
             </div>
 
             {/* Ticker */}
-            <div className="ticker-bar" style={{ border: 'var(--border-thick)', marginBottom: '32px', boxShadow: '4px 4px 0 var(--black)' }}>
+            <div className="ticker-bar" style={{ border: 'var(--border)', marginBottom: '32px' }}>
                 <div className="ticker-track">
                     {['LATEST POSTS', 'COLLEGE NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS', 'LATEST POSTS', 'COLLEGE NEWS', 'SHARE YOUR STORY', 'CONNECT WITH PEERS'].map((t, i) => (
                         <span key={i} className="ticker-item">{t}</span>
@@ -100,20 +101,21 @@ const Feed = ({ newPost }) => {
             ) : posts.length === 0 ? (
                 <div style={{
                     background: 'var(--white)', border: 'var(--border-thick)',
-                    boxShadow: 'var(--shadow-lg)', textAlign: 'center', padding: '80px 24px',
+                    borderRadius: '24px',
+                    boxShadow: 'var(--shadow)', textAlign: 'center', padding: '80px 24px',
                 }}>
                     <div style={{
-                        width: '64px', height: '64px', background: 'var(--yellow)',
-                        border: 'var(--border)', display: 'flex', alignItems: 'center',
+                        width: '64px', height: '64px', background: 'var(--primary-tint)',
+                        borderRadius: '50%', display: 'flex', alignItems: 'center',
                         justifyContent: 'center', margin: '0 auto 20px',
-                        boxShadow: '4px 4px 0 var(--black)',
+                        boxShadow: 'var(--clay-btn-shadow)',
                     }}>
-                        <Inbox size={32} color="var(--black)" />
+                        <Inbox size={32} color="var(--yellow)" />
                     </div>
-                    <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '8px' }}>
+                    <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '20px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '8px' }}>
                         NO POSTS YET
                     </p>
-                    <p style={{ fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
+                    <p style={{ fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                         BE THE FIRST TO SHARE SOMETHING
                     </p>
                 </div>
@@ -124,9 +126,10 @@ const Feed = ({ newPost }) => {
                         {loadingMore && <div className="spinner" />}
                         {!hasMore && posts.length > 0 && (
                             <div style={{
-                                fontSize: '10px', letterSpacing: '4px', textTransform: 'uppercase',
-                                color: 'rgba(10,10,10,0.4)', fontWeight: '700',
-                                borderTop: '3px solid var(--black)', paddingTop: '16px', width: '100%', textAlign: 'center',
+                                fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase',
+                                color: 'var(--text-muted)', fontWeight: '700',
+                                borderTop: '1px solid var(--border-color)', paddingTop: '16px', width: '100%', textAlign: 'center',
+                                fontFamily: "'Outfit', sans-serif",
                             }}>
                                 ■ END OF FEED ■
                             </div>
@@ -140,21 +143,23 @@ const Feed = ({ newPost }) => {
 
 const PostSkeleton = () => (
     <div style={{
-        background: 'var(--white)', border: '5px solid var(--black)',
-        boxShadow: '10px 10px 0 var(--black)', marginBottom: '32px',
+        background: 'var(--white)', border: 'var(--border-thick)',
+        borderRadius: '28px',
+        boxShadow: 'var(--shadow)', marginBottom: '32px',
+        overflow: 'hidden',
     }}>
-        <div style={{ background: '#111', padding: '8px 16px', height: '32px' }} className="skeleton" />
-        <div style={{ padding: '16px 20px', display: 'flex', gap: '12px', borderBottom: '3px solid var(--black)' }}>
-            <div style={{ width: '40px', height: '40px', border: '3px solid var(--black)', flexShrink: 0 }} className="skeleton" />
+        <div style={{ background: 'var(--primary-tint)', padding: '8px 16px', height: '32px' }} className="skeleton" />
+        <div style={{ padding: '16px 20px', display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0 }} className="skeleton" />
             <div style={{ flex: 1 }}>
-                <div style={{ width: '120px', height: '12px', marginBottom: '8px', border: '2px solid var(--black)' }} className="skeleton" />
-                <div style={{ width: '80px', height: '10px' }} className="skeleton" />
+                <div style={{ width: '120px', height: '12px', marginBottom: '8px', borderRadius: '6px' }} className="skeleton" />
+                <div style={{ width: '80px', height: '10px', borderRadius: '5px' }} className="skeleton" />
             </div>
         </div>
-        <div style={{ height: '320px', borderBottom: '3px solid var(--black)' }} className="skeleton" />
+        <div style={{ height: '320px', borderBottom: '1px solid var(--border-color)' }} className="skeleton" />
         <div style={{ padding: '16px 20px' }}>
-            <div style={{ width: '200px', height: '12px', marginBottom: '10px' }} className="skeleton" />
-            <div style={{ width: '100%', height: '12px' }} className="skeleton" />
+            <div style={{ width: '200px', height: '12px', marginBottom: '10px', borderRadius: '6px' }} className="skeleton" />
+            <div style={{ width: '100%', height: '12px', borderRadius: '6px' }} className="skeleton" />
         </div>
     </div>
 );

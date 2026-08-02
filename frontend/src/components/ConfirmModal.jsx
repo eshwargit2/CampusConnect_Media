@@ -7,28 +7,30 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
     return (
         <div className="animate-fade-in" style={{
             position: 'fixed', inset: 0, zIndex: 1000,
-            background: 'rgba(10,10,10,0.85)',
+            background: 'rgba(15,23,42,0.6)',
+            backdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
         }} onClick={e => e.target === e.currentTarget && onClose()}>
             <div className="animate-scale-in" style={{
                 background: 'var(--white)', maxWidth: '420px', width: '100%',
                 border: 'var(--border-thick)', 
-                boxShadow: isDangerous ? '12px 12px 0 var(--red)' : '12px 12px 0 var(--yellow)',
+                borderRadius: '24px',
+                boxShadow: 'var(--shadow-lg)',
                 overflow: 'hidden',
             }}>
                 {/* Header */}
                 <div style={{
-                    background: isDangerous ? 'var(--red)' : 'var(--black)', 
-                    padding: '14px 20px',
-                    borderBottom: isDangerous ? '5px solid var(--black)' : '5px solid var(--yellow)',
+                    background: isDangerous ? 'var(--danger-tint)' : 'var(--primary-tint)', 
+                    padding: '16px 20px',
+                    borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <AlertTriangle size={14} color={isDangerous ? 'var(--black)' : 'var(--yellow)'} />
+                        <AlertTriangle size={14} color={isDangerous ? 'var(--red)' : 'var(--yellow)'} />
                         <span style={{
-                            fontFamily: "'Space Mono', monospace", fontSize: '11px',
-                            fontWeight: '700', letterSpacing: '3px', 
-                            color: isDangerous ? 'var(--black)' : 'var(--yellow)',
+                            fontFamily: "'Outfit', sans-serif", fontSize: '12px',
+                            fontWeight: '700', letterSpacing: '1.5px', 
+                            color: isDangerous ? 'var(--red)' : 'var(--yellow)',
                             textTransform: 'uppercase',
                         }}>
                             {title || 'CONFIRM ACTION'}
@@ -36,11 +38,12 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                     </div>
                     <button onClick={onClose} style={{
                         background: 'none', 
-                        border: `2px solid ${isDangerous ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.3)'}`,
-                        color: isDangerous ? 'var(--black)' : 'var(--white)', 
+                        border: '1px solid var(--border-color)',
+                        color: 'var(--black)', 
                         cursor: 'pointer',
                         width: '28px', height: '28px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: '12px',
                     }}>
                         <X size={13} />
                     </button>
@@ -61,24 +64,24 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                 {/* Action buttons */}
                 <div style={{
                     display: 'flex', 
-                    borderTop: '3px solid var(--black)',
+                    borderTop: '1px solid var(--border-color)',
                 }}>
                     <button onClick={onClose} style={{
                         flex: 1, padding: '14px 20px', 
-                        background: 'var(--white)',
+                        background: 'transparent',
                         border: 'none', 
-                        borderRight: '3px solid var(--black)',
+                        borderRight: '1px solid var(--border-color)',
                         cursor: 'pointer',
-                        fontFamily: "'Space Mono', monospace", 
-                        fontSize: '11px', 
-                        fontWeight: '700',
-                        letterSpacing: '2px', 
+                        fontFamily: "'Outfit', sans-serif", 
+                        fontSize: '12px', 
+                        fontWeight: '600',
+                        letterSpacing: '1px', 
                         textTransform: 'uppercase',
                         color: 'var(--black)',
                         transition: 'all 0.15s',
                     }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(10,10,10,0.05)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'var(--white)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-tint)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                         {cancelText}
                     </button>
@@ -88,16 +91,16 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                         background: isDangerous ? 'var(--red)' : 'var(--yellow)',
                         border: 'none',
                         cursor: 'pointer',
-                        fontFamily: "'Space Mono', monospace", 
-                        fontSize: '11px', 
-                        fontWeight: '700',
-                        letterSpacing: '2px', 
+                        fontFamily: "'Outfit', sans-serif", 
+                        fontSize: '12px', 
+                        fontWeight: '600',
+                        letterSpacing: '1px', 
                         textTransform: 'uppercase',
-                        color: 'var(--black)',
+                        color: '#ffffff',
                         transition: 'all 0.15s',
                     }}
-                        onMouseEnter={e => e.currentTarget.style.background = isDangerous ? '#c62828' : '#e6d000'}
-                        onMouseLeave={e => e.currentTarget.style.background = isDangerous ? 'var(--red)' : 'var(--yellow)'}
+                        onMouseEnter={e => e.currentTarget.style.opacity = 0.9}
+                        onMouseLeave={e => e.currentTarget.style.opacity = 1}
                     >
                         {confirmText}
                     </button>

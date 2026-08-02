@@ -36,21 +36,24 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                 background: 'var(--white)', border: 'var(--border-thick)',
                 boxShadow: 'var(--shadow-lg)', marginBottom: '32px',
                 position: 'relative',
+                borderRadius: '24px',
+                overflow: 'hidden',
             }}>
                 {/* Header */}
                 <div style={{
-                    background: 'var(--black)', padding: '8px 16px',
-                    borderBottom: '4px solid var(--yellow)',
+                    background: 'var(--primary-tint)', padding: '10px 18px',
+                    borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>
                     <span style={{
-                        fontFamily: "'Space Mono', monospace", fontSize: '9px',
-                        fontWeight: '700', letterSpacing: '3px', color: 'var(--yellow)',
+                        fontFamily: "'Outfit', sans-serif", fontSize: '11px',
+                        fontWeight: '700', letterSpacing: '1.5px', color: 'var(--yellow)',
                         textTransform: 'uppercase',
                     }}>■ STORIES</span>
                     <span style={{
-                        fontSize: '8px', letterSpacing: '2px', color: 'rgba(245,240,232,0.4)',
-                        textTransform: 'uppercase',
+                        fontSize: '9px', letterSpacing: '1px', color: 'var(--text-muted)',
+                        textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif",
+                        fontWeight: '600',
                     }}>24H • TAP TO VIEW</span>
                 </div>
 
@@ -58,11 +61,15 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                 <div style={{ position: 'relative' }}>
                     {/* Left arrow */}
                     <button onClick={() => scroll(-1)} style={{
-                        position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-                        zIndex: 2, background: 'var(--black)', border: '2px solid var(--yellow)',
-                        color: 'var(--yellow)', cursor: 'pointer', padding: '6px',
-                        display: 'flex', opacity: 0.8,
-                    }}>
+                        position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)',
+                        zIndex: 2, background: 'var(--white)', border: 'var(--border)',
+                        borderRadius: '50%', color: 'var(--yellow)', cursor: 'pointer', padding: '8px',
+                        display: 'flex', boxShadow: 'var(--clay-btn-shadow)', opacity: 0.9,
+                        transition: 'all 0.2s',
+                    }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+                    >
                         <ChevronLeft size={14} />
                     </button>
 
@@ -83,22 +90,23 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                             }}>
                                 <div style={{
                                     width: '62px', height: '62px',
-                                    border: '3px dashed var(--yellow)',
+                                    border: '2px dashed var(--yellow)',
+                                    borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'rgba(255,224,0,0.08)',
+                                    background: 'var(--primary-tint)',
                                     transition: 'all 0.2s',
                                     position: 'relative',
                                 }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--yellow)'; e.currentTarget.style.borderStyle = 'solid'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,224,0,0.08)'; e.currentTarget.style.borderStyle = 'dashed'; }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.15)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--primary-tint)'; }}
                                 >
-                                    <Plus size={22} color="var(--black)" />
+                                    <Plus size={22} color="var(--yellow)" />
                                 </div>
                                 <span style={{
                                     fontSize: '9px', fontWeight: '700',
-                                    letterSpacing: '1px', textTransform: 'uppercase',
-                                    color: 'rgba(10,10,10,0.5)',
-                                    fontFamily: "'Space Mono', monospace",
+                                    letterSpacing: '0.5px', textTransform: 'uppercase',
+                                    color: 'var(--black)',
+                                    fontFamily: "'Outfit', sans-serif",
                                 }}>
                                     {hasMyStory ? 'ADD' : 'YOUR\nSTORY'}
                                 </span>
@@ -114,8 +122,8 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                                     padding: '0 14px', flexShrink: 0,
                                 }}>
                                     <div className="skeleton" style={{
-                                        width: '62px', height: '62px', borderRadius: '0',
-                                        border: '3px solid var(--black)',
+                                        width: '62px', height: '62px', borderRadius: '50%',
+                                        border: '1px solid var(--border-color)',
                                     }} />
                                     <div className="skeleton" style={{ width: '42px', height: '8px' }} />
                                 </div>
@@ -134,12 +142,13 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                                 >
                                     <div style={{
                                         width: '62px', height: '62px',
+                                        borderRadius: '50%',
                                         border: group.hasUnviewed
                                             ? '3px solid var(--yellow)'
-                                            : '3px solid rgba(10,10,10,0.2)',
+                                            : '1px solid var(--border-color)',
                                         boxShadow: group.hasUnviewed
-                                            ? '0 0 0 2px var(--black), 4px 4px 0 var(--yellow)'
-                                            : '2px 2px 0 rgba(10,10,10,0.1)',
+                                            ? '0 0 12px rgba(59, 130, 246, 0.4), var(--clay-btn-shadow)'
+                                            : 'var(--clay-btn-shadow)',
                                         overflow: 'hidden', position: 'relative',
                                         transition: 'all 0.2s',
                                     }}>
@@ -147,17 +156,17 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                                             <img src={group.user.profile_image} alt={group.user.username}
                                                 style={{
                                                     width: '100%', height: '100%', objectFit: 'cover',
-                                                    filter: group.hasUnviewed ? 'none' : 'grayscale(70%)',
+                                                    filter: group.hasUnviewed ? 'none' : 'opacity(0.8) grayscale(30%)',
                                                     transition: 'filter 0.2s',
                                                 }} />
                                         ) : (
                                             <div style={{
                                                 width: '100%', height: '100%',
-                                                background: group.hasUnviewed ? 'var(--yellow)' : '#ddd',
+                                                background: group.hasUnviewed ? 'var(--yellow)' : 'var(--primary-tint)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                fontFamily: "'Space Grotesk', sans-serif",
+                                                fontFamily: "'Outfit', sans-serif",
                                                 fontWeight: '700', fontSize: '22px',
-                                                color: 'var(--black)',
+                                                color: group.hasUnviewed ? '#ffffff' : 'var(--yellow)',
                                             }}>
                                                 {group.user.username?.charAt(0).toUpperCase()}
                                             </div>
@@ -166,9 +175,10 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                                         {group.stories.length > 1 && (
                                             <div style={{
                                                 position: 'absolute', bottom: '2px', right: '2px',
-                                                background: 'var(--black)', color: 'var(--yellow)',
+                                                background: 'var(--red)', color: '#ffffff',
                                                 fontSize: '8px', fontWeight: '700',
                                                 padding: '1px 4px', lineHeight: '1.2',
+                                                borderRadius: '6px',
                                             }}>
                                                 {group.stories.length}
                                             </div>
@@ -179,8 +189,8 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
                                     <span style={{
                                         fontSize: '9px', fontWeight: '700',
                                         letterSpacing: '0.5px', textTransform: 'uppercase',
-                                        color: group.hasUnviewed ? 'var(--black)' : 'rgba(10,10,10,0.4)',
-                                        fontFamily: "'Space Mono', monospace",
+                                        color: group.hasUnviewed ? 'var(--black)' : 'var(--text-muted)',
+                                        fontFamily: "'Outfit', sans-serif",
                                         overflow: 'hidden', textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap', maxWidth: '68px',
                                     }}>
@@ -193,11 +203,15 @@ const StoryBar = ({ onOpenViewer, onRefreshKey }) => {
 
                     {/* Right arrow */}
                     <button onClick={() => scroll(1)} style={{
-                        position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
-                        zIndex: 2, background: 'var(--black)', border: '2px solid var(--yellow)',
-                        color: 'var(--yellow)', cursor: 'pointer', padding: '6px',
-                        display: 'flex', opacity: 0.8,
-                    }}>
+                        position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                        zIndex: 2, background: 'var(--white)', border: 'var(--border)',
+                        borderRadius: '50%', color: 'var(--yellow)', cursor: 'pointer', padding: '8px',
+                        display: 'flex', boxShadow: 'var(--clay-btn-shadow)', opacity: 0.9,
+                        transition: 'all 0.2s',
+                    }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+                    >
                         <ChevronRight size={14} />
                     </button>
                 </div>

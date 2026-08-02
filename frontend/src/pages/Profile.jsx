@@ -198,45 +198,49 @@ const Profile = () => {
             {/* Profile card */}
             <div style={{
                 background: 'var(--white)', color: 'var(--black)', border: 'var(--border-thick)',
+                borderRadius: '28px',
                 boxShadow: 'var(--shadow-lg)', marginBottom: '32px',
+                overflow: 'hidden',
             }} className="animate-fade-in-up">
 
                 {/* Banner */}
                 <div style={{
-                    height: '100px', background: 'var(--black)',
-                    borderBottom: '5px solid var(--yellow)', position: 'relative',
+                    height: '100px', background: 'var(--primary-tint)',
+                    borderBottom: '1px solid var(--border-color)', position: 'relative',
                     overflow: 'hidden',
                 }}>
                     <div style={{
                         position: 'absolute', inset: 0,
-                        backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,224,0,0.08) 0, rgba(255,224,0,0.08) 1px, transparent 0, transparent 50%)',
+                        backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,224,0,0.04) 0, rgba(255,224,0,0.04) 1px, transparent 0, transparent 50%)',
                         backgroundSize: '40px 40px',
                     }} />
                     <div style={{
                         position: 'absolute', top: '12px', right: '20px',
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        fontSize: '72px', fontWeight: '700', color: 'rgba(255,224,0,0.06)',
+                        fontFamily: "'Outfit', sans-serif",
+                        fontSize: '72px', fontWeight: '800', color: 'var(--yellow)',
+                        opacity: 0.12,
                         lineHeight: '1', userSelect: 'none', letterSpacing: '-4px',
                     }}>CC</div>
                 </div>
 
                 <div style={{ padding: isMobile ? '0 16px 20px' : '0 28px 28px' }}>
                     {/* Avatar row */}
-                    <div style={{ display: 'flex', alignItems: isMobile ? 'center' : 'flex-end', justifyContent: 'space-between', marginTop: '-44px', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: isMobile ? 'center' : 'flex-end', justifyContent: 'space-between', marginTop: '-48px', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                         <div style={{ position: 'relative' }}>
                             {displayAvatar
-                                ? <img src={displayAvatar} alt={profileData.username} className="avatar" style={{ width: '96px', height: '96px', border: '5px solid var(--black)', boxShadow: '4px 4px 0 var(--yellow)' }} />
-                                : <div className="avatar-text" style={{ width: '96px', height: '96px', fontSize: '36px', border: '5px solid var(--black)', boxShadow: '4px 4px 0 var(--yellow)' }}>{profileData.username?.charAt(0)}</div>
+                                ? <img src={displayAvatar} alt={profileData.username} className="avatar" style={{ width: '96px', height: '96px', border: '3px solid var(--white)', borderRadius: '50%', boxShadow: 'var(--shadow)' }} />
+                                : <div className="avatar-text" style={{ width: '96px', height: '96px', fontSize: '36px', border: '3px solid var(--white)', borderRadius: '50%', boxShadow: 'var(--shadow)' }}>{profileData.username?.charAt(0)}</div>
                             }
                             {isOwner && editing && (
                                 <button onClick={() => fileInputRef.current?.click()} style={{
                                     position: 'absolute', bottom: '-4px', right: '-4px',
-                                    background: 'var(--yellow)', border: '3px solid var(--black)',
+                                    background: 'var(--yellow)', border: 'none',
                                     cursor: 'pointer', width: '30px', height: '30px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '2px 2px 0 var(--black)',
+                                    borderRadius: '50%',
+                                    boxShadow: 'var(--clay-btn-shadow)',
                                 }}>
-                                    <Camera size={14} color="var(--black)" />
+                                    <Camera size={14} color="#ffffff" />
                                 </button>
                             )}
                             {!editing && <OnlineDot userId={profileData.id} size={14} />}
@@ -338,15 +342,13 @@ const Profile = () => {
                     ) : (
                         /* ── DISPLAY MODE ── */
                         <div style={{ marginBottom: '24px' }}>
-                            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '26px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '4px' }}>
+                            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '26px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '4px' }}>
                                 {profileData.username}
                             </h1>
-                            <p style={{ fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '10px' }}>
-                                {profileData.email}
-                            </p>
+
 
                             {profileData.bio && (
-                                <p style={{ fontSize: '13px', lineHeight: '1.7', maxWidth: '400px', borderLeft: '4px solid var(--yellow)', paddingLeft: '12px', marginBottom: '14px' }}>
+                                <p style={{ fontSize: '13px', lineHeight: '1.7', maxWidth: '400px', borderLeft: '4px solid var(--yellow)', paddingLeft: '12px', marginBottom: '14px', color: 'var(--black)' }}>
                                     {profileData.bio}
                                 </p>
                             )}
@@ -354,7 +356,7 @@ const Profile = () => {
                             {(hasAddress || hasWebsite) && (
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '14px' }}>
                                     {hasAddress && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'rgba(10,10,10,0.6)' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                             <MapPin size={13} color="var(--red)" /> {profileData.address}
                                         </span>
                                     )}
@@ -378,17 +380,18 @@ const Profile = () => {
                                             <a key={s.key} href={url} target="_blank" rel="noopener noreferrer"
                                                 style={{
                                                     display: 'flex', alignItems: 'center', gap: '6px',
-                                                    background: 'var(--black)', color: s.color,
-                                                    border: '3px solid var(--black)',
-                                                    padding: '6px 12px',
-                                                    fontFamily: "'Space Mono', monospace",
-                                                    fontSize: '10px', fontWeight: '700',
-                                                    letterSpacing: '1px', textTransform: 'uppercase',
+                                                    background: 'var(--white)', color: s.color,
+                                                    border: 'var(--border)',
+                                                    padding: '6px 14px',
+                                                    borderRadius: '12px',
+                                                    fontFamily: "'Outfit', sans-serif",
+                                                    fontSize: '11px', fontWeight: '600',
+                                                    letterSpacing: '0.5px', textTransform: 'uppercase',
                                                     textDecoration: 'none', transition: 'all 0.15s',
-                                                    boxShadow: '3px 3px 0 var(--yellow)',
+                                                    boxShadow: 'var(--clay-btn-shadow)',
                                                 }}
-                                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--yellow)'; e.currentTarget.style.color = 'var(--black)'; e.currentTarget.style.boxShadow = '3px 3px 0 var(--black)'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--black)'; e.currentTarget.style.color = s.color; e.currentTarget.style.boxShadow = '3px 3px 0 var(--yellow)'; }}
+                                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-tint)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; e.currentTarget.style.transform = 'none'; }}
                                             >
                                                 {s.icon} {val.replace(/^https?:\/\/(www\.)?(instagram\.com|x\.com|twitter\.com|linkedin\.com\/in|github\.com)\/?/, '')}
                                             </a>
@@ -400,7 +403,7 @@ const Profile = () => {
                     )}
 
                     {/* Stats */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', border: 'var(--border)', boxShadow: '4px 4px 0 var(--black)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', border: 'var(--border)', borderRadius: '16px', boxShadow: 'var(--clay-btn-shadow)', overflow: 'hidden' }}>
                         {[
                             { label: 'POSTS', value: posts.length, action: null },
                             { label: 'FOLLOWERS', value: profileData.followers_count || 0, action: () => openFollowModal('followers') },
@@ -412,13 +415,14 @@ const Profile = () => {
                                     border: 'none', background: 'transparent',
                                     cursor: s.action ? 'pointer' : 'default',
                                     transition: 'background 0.15s',
-                                    borderRight: i < arr.length - 1 ? '3px solid var(--black)' : 'none',
+                                    borderRight: i < arr.length - 1 ? '1px solid var(--border-color)' : 'none',
+                                    color: 'var(--black)',
                                 }}
-                                onMouseEnter={e => { if (s.action) e.currentTarget.style.background = 'rgba(255,224,0,0.15)'; }}
+                                onMouseEnter={e => { if (s.action) e.currentTarget.style.background = 'var(--primary-tint)'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                             >
-                                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '28px', fontWeight: '700', lineHeight: 1 }}>{s.value}</p>
-                                <p style={{ fontSize: '9px', letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginTop: '4px', fontWeight: '700' }}>{s.label}</p>
+                                <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '28px', fontWeight: '700', lineHeight: 1 }}>{s.value}</p>
+                                <p style={{ fontSize: '9px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '600', fontFamily: "'Outfit', sans-serif" }}>{s.label}</p>
                             </button>
                         ))}
                     </div>
@@ -427,26 +431,26 @@ const Profile = () => {
 
             {/* Posts section */}
             {profileData.is_private && !isOwner && followStatus !== 'accepted' ? (
-                <div style={{ padding: '60px 24px', textAlign: 'center', margin: '24px 0', border: 'var(--border-thick)', boxShadow: 'var(--shadow-lg)', background: 'var(--white)', color: 'var(--black)' }}>
-                    <div style={{ width: '56px', height: '56px', background: 'var(--yellow)', border: '3px solid var(--black)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '4px 4px 0 var(--black)' }}>
-                        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '24px', fontWeight: '700' }}>🔒</span>
+                <div style={{ padding: '60px 24px', textAlign: 'center', margin: '24px 0', border: 'var(--border-thick)', borderRadius: '24px', boxShadow: 'var(--shadow-lg)', background: 'var(--white)', color: 'var(--black)' }}>
+                    <div style={{ width: '56px', height: '56px', background: 'var(--primary-tint)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: 'var(--clay-btn-shadow)' }}>
+                        <span style={{ fontSize: '24px' }}>🔒</span>
                     </div>
-                    <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.3px', marginBottom: '6px' }}>THIS ACCOUNT IS PRIVATE</p>
-                    <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
+                    <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.3px', marginBottom: '6px' }}>THIS ACCOUNT IS PRIVATE</p>
+                    <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                         FOLLOW TO SEE THEIR POSTS AND STORIES
                     </p>
                 </div>
             ) : (
-            <div style={{ border: 'var(--border-thick)', boxShadow: 'var(--shadow-lg)', background: 'var(--white)', color: 'var(--black)' }}>
+            <div style={{ border: 'var(--border-thick)', borderRadius: '24px', boxShadow: 'var(--shadow-lg)', background: 'var(--white)', color: 'var(--black)', overflow: 'hidden' }}>
                 {/* Posts header with view toggle */}
                 <div style={{
-                    background: 'var(--black)', padding: '12px 20px',
-                    borderBottom: '5px solid var(--yellow)',
+                    background: 'var(--primary-tint)', padding: '16px 20px',
+                    borderBottom: '1px solid var(--border-color)',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <Grid3X3 size={14} color="var(--yellow)" />
-                        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', fontWeight: '700', letterSpacing: '3px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
+                        <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '700', letterSpacing: '1.5px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
                             POSTS — {posts.length}
                         </span>
                     </div>
@@ -456,19 +460,21 @@ const Profile = () => {
                         <div style={{ display: 'flex', gap: '4px' }}>
                             <button onClick={() => setViewMode('grid')} style={{
                                 background: viewMode === 'grid' ? 'var(--yellow)' : 'transparent',
-                                border: '2px solid var(--yellow)', cursor: 'pointer',
+                                border: '1px solid var(--border-color)', cursor: 'pointer',
                                 padding: '5px 8px', display: 'flex', alignItems: 'center',
+                                borderRadius: '10px', boxShadow: 'var(--clay-btn-shadow)',
                                 transition: 'all 0.15s',
                             }}>
-                                <Grid3X3 size={13} color={viewMode === 'grid' ? 'var(--black)' : 'var(--yellow)'} />
+                                <Grid3X3 size={13} color={viewMode === 'grid' ? '#ffffff' : 'var(--yellow)'} />
                             </button>
                             <button onClick={() => setViewMode('list')} style={{
                                 background: viewMode === 'list' ? 'var(--yellow)' : 'transparent',
-                                border: '2px solid var(--yellow)', cursor: 'pointer',
+                                border: '1px solid var(--border-color)', cursor: 'pointer',
                                 padding: '5px 8px', display: 'flex', alignItems: 'center',
+                                borderRadius: '10px', boxShadow: 'var(--clay-btn-shadow)',
                                 transition: 'all 0.15s',
                             }}>
-                                <List size={13} color={viewMode === 'list' ? 'var(--black)' : 'var(--yellow)'} />
+                                <List size={13} color={viewMode === 'list' ? '#ffffff' : 'var(--yellow)'} />
                             </button>
                         </div>
                     )}
@@ -476,11 +482,11 @@ const Profile = () => {
 
                 {posts.length === 0 ? (
                     <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-                        <div style={{ width: '56px', height: '56px', background: 'var(--yellow)', border: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '4px 4px 0 var(--black)' }}>
-                            <Image size={28} color="var(--black)" />
+                        <div style={{ width: '56px', height: '56px', background: 'var(--primary-tint)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: 'var(--clay-btn-shadow)' }}>
+                            <Image size={28} color="var(--yellow)" />
                         </div>
-                        <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.3px', marginBottom: '6px' }}>NO POSTS YET</p>
-                        <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
+                        <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '-0.3px', marginBottom: '6px' }}>NO POSTS YET</p>
+                        <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                             {isOwner ? 'START SHARING YOUR COLLEGE MOMENTS' : 'THIS USER HAS NOT POSTED YET'}
                         </p>
                     </div>
@@ -490,27 +496,27 @@ const Profile = () => {
                         {posts.map((post, i) => (
                             <button key={post.id} onClick={() => setViewMode('list')} style={{
                                 aspectRatio: '1', border: 'none',
-                                borderBottom: '3px solid var(--black)',
-                                borderRight: (isMobile ? (i + 1) % 2 !== 0 : (i + 1) % 3 !== 0) ? '3px solid var(--black)' : 'none',
+                                borderBottom: '1px solid var(--border-color)',
+                                borderRight: (isMobile ? (i + 1) % 2 !== 0 : (i + 1) % 3 !== 0) ? '1px solid var(--border-color)' : 'none',
                                 padding: 0, cursor: 'crosshair', overflow: 'hidden',
-                                position: 'relative', background: '#ddd',
+                                position: 'relative', background: 'var(--bg-body)',
                             }}>
                                 <img src={post.image_url} alt={post.caption} style={{
                                     width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-                                    filter: 'grayscale(60%)', transition: 'filter 0.25s, transform 0.3s',
+                                    filter: 'grayscale(30%)', transition: 'filter 0.25s, transform 0.3s',
                                 }}
                                     onMouseEnter={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'scale(1.06)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.filter = 'grayscale(60%)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.filter = 'grayscale(30%)'; e.currentTarget.style.transform = 'scale(1)'; }}
                                 />
                                 <div style={{
-                                    position: 'absolute', inset: 0, background: 'rgba(10,10,10,0)', opacity: 0,
+                                    position: 'absolute', inset: 0, background: 'rgba(15,23,42,0)', opacity: 0,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     color: 'var(--yellow)', fontWeight: '700', fontSize: '11px',
-                                    letterSpacing: '2px', textTransform: 'uppercase', gap: '12px',
+                                    letterSpacing: '1px', textTransform: 'uppercase', gap: '12px',
                                     transition: 'all 0.2s',
                                 }}
-                                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(10,10,10,0.7)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.background = 'rgba(10,10,10,0)'; }}
+                                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(15,23,42,0.6)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.background = 'rgba(15,23,42,0)'; }}
                                 >
                                     ❤ {post.likes_count || 0} &nbsp;💬 {post.comments_count || 0}
                                 </div>
@@ -531,28 +537,29 @@ const Profile = () => {
             {followModal && (
                 <div className="animate-fade-in" style={{
                     position: 'fixed', inset: 0, zIndex: 100,
-                    background: 'rgba(10,10,10,0.9)',
+                    background: 'rgba(15,23,42,0.6)',
+                    backdropFilter: 'blur(8px)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
                 }} onClick={e => e.target === e.currentTarget && setFollowModal(null)}>
                     <div className="animate-scale-in" style={{
                         background: 'var(--white)', color: 'var(--black)', maxWidth: '420px', width: '100%',
                         maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-                        border: 'var(--border-thick)', boxShadow: '12px 12px 0 var(--yellow)',
+                        border: 'var(--border-thick)', borderRadius: '24px', boxShadow: 'var(--shadow-lg)',
                         overflow: 'hidden',
                     }}>
                         <div style={{
-                            background: 'var(--black)', padding: '14px 20px',
-                            borderBottom: '5px solid var(--yellow)',
+                            background: 'var(--primary-tint)', padding: '16px 20px',
+                            borderBottom: '1px solid var(--border-color)',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             flexShrink: 0,
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 {followModal === 'followers' ? <Users size={14} color="var(--yellow)" /> : <UserCheck size={14} color="var(--yellow)" />}
-                                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: '700', letterSpacing: '3px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
+                                <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '700', letterSpacing: '1.5px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
                                     {followModal}
                                 </span>
                             </div>
-                            <button onClick={() => setFollowModal(null)} style={{ background: 'none', border: '2px solid rgba(245,240,232,0.3)', color: 'var(--white)', cursor: 'pointer', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button onClick={() => setFollowModal(null)} style={{ background: 'none', border: '1px solid var(--border-color)', color: 'var(--black)', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <X size={13} />
                             </button>
                         </div>
@@ -572,27 +579,27 @@ const Profile = () => {
                                     <div key={u.id} style={{
                                             display: 'flex', alignItems: 'center', gap: '14px',
                                             padding: '14px 20px', textDecoration: 'none',
-                                            borderBottom: i < followList.length - 1 ? '3px solid var(--black)' : 'none',
+                                            borderBottom: i < followList.length - 1 ? '1px solid var(--border-color)' : 'none',
                                             transition: 'background 0.15s', color: 'var(--black)',
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,224,0,0.12)'}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-tint)'}
                                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                     >
                                         <Link to={`/profile/${u.username}`} onClick={() => setFollowModal(null)} style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, textDecoration: 'none', color: 'inherit' }}>
                                             {u.profile_image ? <img src={u.profile_image} alt={u.username} className="avatar" style={{ width: '40px', height: '40px', flexShrink: 0 }} /> : <div className="avatar-text" style={{ width: '40px', height: '40px', fontSize: '15px', flexShrink: 0 }}>{u.username?.charAt(0)}</div>}
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{u.username}</p>
-                                                <p style={{ fontSize: '11px', color: 'rgba(10,10,10,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.bio || 'COLLEGE MEMBER'}</p>
+                                                <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{u.username}</p>
+                                                <p style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.bio || 'COLLEGE MEMBER'}</p>
                                             </div>
                                         </Link>
                                         
                                         {followModal === 'requests' ? (
                                             <div style={{ display: 'flex', gap: '6px' }}>
-                                                <button onClick={() => handleRequestAction(u.request_id, 'accept')} style={{ background: 'var(--yellow)', border: '2px solid var(--black)', padding: '6px 10px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Space Mono', monospace" }}>ACCEPT</button>
-                                                <button onClick={() => handleRequestAction(u.request_id, 'reject')} style={{ background: 'var(--white)', border: '2px solid var(--red)', color: 'var(--red)', padding: '6px 10px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Space Mono', monospace" }}>REJECT</button>
+                                                <button onClick={() => handleRequestAction(u.request_id, 'accept')} style={{ background: 'var(--yellow)', border: 'none', color: '#ffffff', borderRadius: '8px', padding: '6px 12px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Outfit', sans-serif", boxShadow: 'var(--clay-btn-shadow)' }}>ACCEPT</button>
+                                                <button onClick={() => handleRequestAction(u.request_id, 'reject')} style={{ background: 'transparent', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: '8px', padding: '6px 12px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}>REJECT</button>
                                             </div>
                                         ) : (
-                                            <Link to={`/profile/${u.username}`} onClick={() => setFollowModal(null)} style={{ fontSize: '9px', letterSpacing: '2px', color: 'rgba(10,10,10,0.3)', fontWeight: '700', textTransform: 'uppercase', textDecoration: 'none' }}>VIEW →</Link>
+                                            <Link to={`/profile/${u.username}`} onClick={() => setFollowModal(null)} style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--yellow)', fontWeight: '700', textTransform: 'uppercase', textDecoration: 'none', fontFamily: "'Outfit', sans-serif" }}>VIEW →</Link>
                                         )}
                                     </div>
                                 ))
@@ -601,11 +608,12 @@ const Profile = () => {
 
                         {/* Footer */}
                         <div style={{
-                            background: 'var(--yellow)', padding: '8px 20px',
-                            borderTop: '3px solid var(--black)',
-                            font: "700 9px/1 'Space Mono', monospace",
-                            letterSpacing: '3px', textTransform: 'uppercase',
+                            background: 'var(--primary-tint)', padding: '10px 20px',
+                            borderTop: '1px solid var(--border-color)',
+                            font: "700 11px/1 'Outfit', sans-serif",
+                            letterSpacing: '1.5px', textTransform: 'uppercase',
                             display: 'flex', justifyContent: 'space-between',
+                            color: 'var(--yellow)',
                             flexShrink: 0,
                         }}>
                             <span>{profileData.username}</span>
@@ -619,28 +627,29 @@ const Profile = () => {
             {showSettingsModal && (
                 <div className="animate-fade-in" style={{
                     position: 'fixed', inset: 0, zIndex: 100,
-                    background: 'rgba(10,10,10,0.9)',
+                    background: 'rgba(15,23,42,0.6)',
+                    backdropFilter: 'blur(8px)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
                 }} onClick={e => e.target === e.currentTarget && setShowSettingsModal(false)}>
                     <div className="animate-scale-in" style={{
                         background: 'var(--white)', color: 'var(--black)', maxWidth: '420px', width: '100%',
                         maxHeight: '90vh', display: 'flex', flexDirection: 'column',
-                        border: 'var(--border-thick)', boxShadow: '12px 12px 0 var(--yellow)',
+                        border: 'var(--border-thick)', borderRadius: '24px', boxShadow: 'var(--shadow-lg)',
                         overflow: 'hidden',
                     }}>
                         <div style={{
-                            background: 'var(--black)', padding: '14px 20px',
-                            borderBottom: '5px solid var(--yellow)',
+                            background: 'var(--primary-tint)', padding: '16px 20px',
+                            borderBottom: '1px solid var(--border-color)',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             flexShrink: 0,
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Settings size={14} color="var(--yellow)" />
-                                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: '700', letterSpacing: '3px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
+                                <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '700', letterSpacing: '1.5px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
                                     SETTINGS
                                 </span>
                             </div>
-                            <button onClick={() => setShowSettingsModal(false)} style={{ background: 'none', border: '2px solid rgba(245,240,232,0.3)', color: 'var(--white)', cursor: 'pointer', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button onClick={() => setShowSettingsModal(false)} style={{ background: 'none', border: '1px solid var(--border-color)', color: 'var(--black)', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <X size={13} />
                             </button>
                         </div>
@@ -652,40 +661,40 @@ const Profile = () => {
                                 </label>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <label style={{ display: 'flex', gap: '12px', cursor: 'pointer', alignItems: 'flex-start' }}>
-                                        <input type="checkbox" checked={profileData.is_private || false} onChange={e => togglePrivacy('is_private', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--black)', marginTop: '2px' }} />
+                                        <input type="checkbox" checked={profileData.is_private || false} onChange={e => togglePrivacy('is_private', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--yellow)', marginTop: '2px' }} />
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '14px' }}>PRIVATE ACCOUNT</span>
-                                            <span style={{ fontSize: '11px', color: 'rgba(10,10,10,0.6)', lineHeight: 1.4 }}>If enabled, only approved followers can see your posts and stories.</span>
+                                            <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '14px' }}>PRIVATE ACCOUNT</span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>If enabled, only approved followers can see your posts and stories.</span>
                                         </div>
                                     </label>
                                     <label style={{ display: 'flex', gap: '12px', cursor: 'pointer', alignItems: 'flex-start' }}>
-                                        <input type="checkbox" checked={profileData.hide_likes || false} onChange={e => togglePrivacy('hide_likes', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--black)', marginTop: '2px' }} />
+                                        <input type="checkbox" checked={profileData.hide_likes || false} onChange={e => togglePrivacy('hide_likes', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--yellow)', marginTop: '2px' }} />
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '14px' }}>HIDE LIKE COUNTS</span>
-                                            <span style={{ fontSize: '11px', color: 'rgba(10,10,10,0.6)', lineHeight: 1.4 }}>If enabled, the total number of likes on your posts and stories will be hidden from everyone else.</span>
+                                            <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '14px' }}>HIDE LIKE COUNTS</span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>If enabled, the total number of likes on your posts and stories will be hidden from everyone else.</span>
                                         </div>
                                     </label>
                                 </div>
                             </div>
                             
                             {/* Delete Account Section */}
-                            <div style={{ borderTop: '2px solid rgba(10,10,10,0.1)', paddingTop: '24px' }}>
+                            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
                                 <label className="field-label" style={{ color: 'var(--red)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     ⚠ DANGER ZONE
                                 </label>
-                                <p style={{ fontSize: '12px', color: 'rgba(10,10,10,0.6)', marginBottom: '16px', lineHeight: '1.6' }}>
+                                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.6' }}>
                                     Once you delete your account, there is no going back. All your posts, comments, and profile data will be permanently deleted.
                                 </p>
                                 <button onClick={() => { setShowSettingsModal(false); setShowDeleteAccountModal(true); }} style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                     width: '100%', padding: '14px 20px', background: 'var(--white)',
-                                    border: '3px solid var(--red)', color: 'var(--red)', cursor: 'pointer',
-                                    fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: '700',
-                                    letterSpacing: '2px', textTransform: 'uppercase', transition: 'all 0.15s',
-                                    boxShadow: '4px 4px 0 var(--red)',
+                                    border: 'var(--border)', color: 'var(--red)', cursor: 'pointer',
+                                    fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '700',
+                                    letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s',
+                                    borderRadius: '16px', boxShadow: 'var(--clay-btn-shadow)',
                                 }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--red)'; e.currentTarget.style.color = 'var(--white)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; e.currentTarget.style.color = 'var(--red)'; }}>
+                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-tint)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; }}>
                                     <AlertCircle size={15} /> DELETE ACCOUNT
                                 </button>
                             </div>

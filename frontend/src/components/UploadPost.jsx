@@ -67,33 +67,36 @@ const UploadPost = ({ onClose, onPostCreated }) => {
     return (
         <div className="animate-fade-in" style={{
             position: 'fixed', inset: 0, zIndex: 100,
-            background: 'rgba(10,10,10,0.88)',
+            background: 'rgba(15,23,42,0.6)',
+            backdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
         }} onClick={e => e.target === e.currentTarget && onClose()}>
             <div className="animate-scale-in" style={{
                 background: 'var(--white)', width: '100%', maxWidth: '500px',
-                border: 'var(--border-thick)', boxShadow: '16px 16px 0 var(--yellow)',
+                border: 'var(--border-thick)', borderRadius: '24px',
+                boxShadow: 'var(--shadow-lg)', overflow: 'hidden',
             }}>
                 {/* Header */}
                 <div style={{
-                    background: 'var(--black)', padding: '16px 24px',
+                    background: 'var(--primary-tint)', padding: '16px 24px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    borderBottom: '5px solid var(--yellow)',
+                    borderBottom: '1px solid var(--border-color)',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '8px', height: '8px', background: 'var(--yellow)' }} />
-                        <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: '700', fontSize: '12px', letterSpacing: '3px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
+                        <span style={{ color: 'var(--yellow)', fontWeight: '700' }}>✦</span>
+                        <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '13px', letterSpacing: '1.5px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
                             NEW POST
                         </span>
                     </div>
                     <button onClick={onClose} style={{
-                        background: 'none', border: '2px solid rgba(245,240,232,0.3)',
-                        color: 'var(--white)', cursor: 'pointer', width: '32px', height: '32px',
+                        background: 'none', border: '1px solid var(--border-color)',
+                        color: 'var(--black)', cursor: 'pointer', width: '32px', height: '32px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: '12px',
                         transition: 'all 0.15s',
                     }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--red)'; e.currentTarget.style.borderColor = 'var(--red)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(245,240,232,0.3)'; }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-tint)'; e.currentTarget.style.color = 'var(--red)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--black)'; }}
                     >
                         <X size={15} />
                     </button>
@@ -103,29 +106,31 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                     {/* Drop zone */}
                     {!preview ? (
                         <div {...getRootProps()} style={{
-                            border: `4px dashed ${isDragActive ? 'var(--yellow)' : 'var(--black)'}`,
+                            border: `2px dashed var(--yellow)`,
+                            borderRadius: '16px',
                             padding: '40px 24px', textAlign: 'center', cursor: 'pointer',
-                            background: isDragActive ? 'rgba(255,224,0,0.06)' : '#f0ebe3',
+                            background: isDragActive ? 'var(--primary-tint)' : 'var(--bg-body)',
                             transition: 'all 0.15s',
-                            boxShadow: isDragActive ? 'inset 0 0 0 4px var(--yellow)' : 'none',
+                            boxShadow: 'var(--clay-input-shadow)',
                         }}>
                             <input {...getInputProps()} />
                             <div style={{
-                                width: '56px', height: '56px', background: 'var(--black)',
+                                width: '56px', height: '56px', background: 'var(--primary-tint)',
+                                borderRadius: '50%',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                margin: '0 auto 16px', border: '3px solid var(--yellow)',
+                                margin: '0 auto 16px',
                             }}>
                                 <ImagePlus size={26} color="var(--yellow)" />
                             </div>
-                            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                            <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', color: 'var(--black)' }}>
                                 {isDragActive ? 'DROP IT HERE' : 'DRAG & DROP OR CLICK'}
                             </p>
-                            <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
+                            <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                                 PNG · JPG · GIF · MP4 — MAX 200MB
                             </p>
                         </div>
                     ) : (
-                        <div style={{ position: 'relative', border: 'var(--border-thick)' }}>
+                        <div style={{ position: 'relative', border: 'var(--border-thick)', borderRadius: '16px', overflow: 'hidden' }}>
                             {file?.type.startsWith('video/') ? (
                                 <video src={preview} controls style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', display: 'block' }} />
                             ) : (
@@ -133,9 +138,10 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                             )}
                             <button type="button" onClick={() => { setFile(null); setPreview(null); }} style={{
                                 position: 'absolute', top: '10px', right: '10px',
-                                background: 'var(--black)', border: '2px solid var(--white)',
-                                color: 'var(--white)', cursor: 'pointer', width: '32px', height: '32px',
+                                background: 'var(--white)', border: '1px solid var(--border-color)',
+                                color: 'var(--black)', cursor: 'pointer', width: '32px', height: '32px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                borderRadius: '50%', boxShadow: 'var(--clay-btn-shadow)',
                             }}>
                                 <X size={15} />
                             </button>
@@ -143,8 +149,10 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                             <div style={{
                                 position: 'absolute', bottom: '0', left: '0',
                                 background: 'var(--yellow)', padding: '4px 10px',
-                                fontSize: '9px', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase',
-                                borderTop: '2px solid var(--black)', borderRight: '2px solid var(--black)',
+                                fontSize: '9px', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase',
+                                color: '#ffffff',
+                                borderTopRightRadius: '12px',
+                                fontFamily: "'Outfit', sans-serif",
                             }}>MEDIA READY</div>
                         </div>
                     )}
@@ -156,14 +164,14 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                             onChange={e => setCaption(e.target.value)}
                             placeholder="WRITE YOUR CAPTION..." rows={3}
                             maxLength={500} style={{ resize: 'vertical' }} disabled={loading} />
-                        <div style={{ textAlign: 'right', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginTop: '6px' }}>
+                        <div style={{ textAlign: 'right', fontSize: '10px', letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--text-muted)', marginTop: '6px', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                             {caption.length}/500
                         </div>
                     </div>
 
                     {/* Submit */}
                     <button type="submit" className="btn-brand"
-                        style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '13px' }}
+                        style={{ width: '100%', justifyContent: 'center', padding: '16px !important', fontSize: '13px' }}
                         disabled={loading}>
                         {loading
                             ? <><Loader2 size={16} className="animate-spin" /> UPLOADING...</>

@@ -48,44 +48,36 @@ export default function AdminLogin() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0a',
+      background: 'var(--bg-body)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: isMobile ? 16 : 24,
       position: 'relative',
       overflow: 'hidden',
-      fontFamily: "'Space Mono', monospace",
+      fontFamily: "'Outfit', sans-serif",
     }}>
-      {/* Background grid */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: `
-          linear-gradient(rgba(255,224,0,0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,224,0,0.04) 1px, transparent 1px)
-        `,
-        backgroundSize: '40px 40px',
-        pointerEvents: 'none',
-      }} />
 
       <div style={{
         width: '100%',
         maxWidth: 440,
-        background: '#111',
-        border: '3px solid #FFE000',
-        boxShadow: isMobile ? '6px 6px 0 #FFE000' : '10px 10px 0 #FFE000',
+        background: 'var(--white)',
+        border: 'var(--border-thick)',
+        borderRadius: '24px',
+        boxShadow: 'var(--shadow-lg)',
         position: 'relative',
         zIndex: 1,
+        overflow: 'hidden',
       }}>
         {/* Header */}
-        <div style={{ background: '#FFE000', padding: isMobile ? '16px 20px' : '20px 28px', borderBottom: '3px solid #0a0a0a' }}>
+        <div style={{ background: 'var(--primary-tint)', padding: isMobile ? '16px 20px' : '24px 28px', borderBottom: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: isMobile ? 22 : 28 }}>⚡</span>
             <div>
-              <div style={{ fontSize: isMobile ? 13 : 16, fontWeight: 700, letterSpacing: 3, color: '#0a0a0a', lineHeight: 1.2 }}>
+              <div style={{ fontSize: isMobile ? 13 : 16, fontWeight: 800, letterSpacing: '0.5px', color: 'var(--black)', lineHeight: 1.2 }}>
                 CAMPUSCONNECT
               </div>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 4, color: '#333', marginTop: 2 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1px', color: 'var(--text-muted)', marginTop: 2 }}>
                 ADMIN PORTAL
               </div>
             </div>
@@ -94,19 +86,18 @@ export default function AdminLogin() {
 
         {/* Body */}
         <div style={{ padding: isMobile ? '24px 20px' : '32px 28px' }}>
-          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: '#FFE000', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: 'var(--yellow)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 6 }}>
             Restricted Access
           </div>
-          <div style={{ fontSize: 11, color: '#888', letterSpacing: 1, marginBottom: 24 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: 0.5, marginBottom: 24 }}>
             Enter your admin credentials to continue
           </div>
 
           {error && (
             <div style={{
-              background: '#1a0000', border: '2px solid #FF2D2D', color: '#FF2D2D',
-              padding: '12px 16px', fontSize: 12, fontWeight: 700, letterSpacing: 1,
+              background: '#fff0f0', border: '1px solid #FF2D2D', color: '#FF2D2D',
+              padding: '12px 16px', fontSize: 12, fontWeight: 700, borderRadius: '8px',
               display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20,
-              boxShadow: '4px 4px 0 #FF2D2D',
             }}>
               <span>⛔</span> {error}
             </div>
@@ -114,7 +105,7 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#FFE000', borderLeft: '3px solid #FFE000', paddingLeft: 8 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: 'var(--text-body)', borderLeft: '3px solid var(--yellow)', paddingLeft: 8 }}>
                 USERNAME
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -129,18 +120,19 @@ export default function AdminLogin() {
                   autoComplete="username"
                   style={{
                     width: '100%', padding: '13px 14px 13px 42px',
-                    background: '#0a0a0a', border: '2px solid #333', color: '#f5f0e8',
-                    fontSize: isMobile ? 16 : 14, fontFamily: "'Space Mono', monospace",
-                    outline: 'none', borderRadius: 0, boxSizing: 'border-box',
+                    background: 'var(--bg-body)', border: '1px solid var(--border-color)', color: 'var(--text-body)',
+                    fontSize: isMobile ? 16 : 14, fontFamily: "'Inter', sans-serif",
+                    outline: 'none', borderRadius: '12px', boxSizing: 'border-box',
+                    transition: 'all 0.15s',
                   }}
-                  onFocus={e => { e.target.style.borderColor = '#FFE000'; }}
-                  onBlur={e => { e.target.style.borderColor = '#333'; }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--yellow)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--border-color)'; }}
                 />
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#FFE000', borderLeft: '3px solid #FFE000', paddingLeft: 8 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: 'var(--text-body)', borderLeft: '3px solid var(--yellow)', paddingLeft: 8 }}>
                 PASSWORD
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -155,12 +147,13 @@ export default function AdminLogin() {
                   autoComplete="current-password"
                   style={{
                     width: '100%', padding: '13px 44px 13px 42px',
-                    background: '#0a0a0a', border: '2px solid #333', color: '#f5f0e8',
-                    fontSize: isMobile ? 16 : 14, fontFamily: "'Space Mono', monospace",
-                    outline: 'none', borderRadius: 0, boxSizing: 'border-box',
+                    background: 'var(--bg-body)', border: '1px solid var(--border-color)', color: 'var(--text-body)',
+                    fontSize: isMobile ? 16 : 14, fontFamily: "'Inter', sans-serif",
+                    outline: 'none', borderRadius: '12px', boxSizing: 'border-box',
+                    transition: 'all 0.15s',
                   }}
-                  onFocus={e => { e.target.style.borderColor = '#FFE000'; }}
-                  onBlur={e => { e.target.style.borderColor = '#333'; }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--yellow)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--border-color)'; }}
                 />
                 <button
                   type="button"
@@ -178,12 +171,12 @@ export default function AdminLogin() {
               type="submit"
               disabled={loading}
               style={{
-                background: '#FFE000', color: '#0a0a0a', border: '3px solid #FFE000',
-                padding: '15px 20px', fontSize: 12, fontWeight: 700, letterSpacing: 2,
-                textTransform: 'uppercase', fontFamily: "'Space Mono', monospace",
-                boxShadow: '6px 6px 0 rgba(255,224,0,0.3)', cursor: loading ? 'not-allowed' : 'pointer',
+                background: 'var(--primary-tint)', color: 'var(--yellow)', border: 'none',
+                padding: '15px 20px', fontSize: 12, fontWeight: 700, letterSpacing: '1px',
+                textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif",
+                boxShadow: 'var(--clay-btn-shadow)', cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                marginTop: 8, width: '100%', borderRadius: 0, opacity: loading ? 0.7 : 1,
+                marginTop: 8, width: '100%', borderRadius: '12px', opacity: loading ? 0.7 : 1,
                 minHeight: 48,
               }}
             >
@@ -191,16 +184,16 @@ export default function AdminLogin() {
             </button>
           </form>
 
-          <div style={{ marginTop: 24, fontSize: 10, color: '#555', textAlign: 'center', letterSpacing: 0.5, lineHeight: 1.6 }}>
+          <div style={{ marginTop: 24, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: 0.5, lineHeight: 1.6 }}>
             🔒 This area is for administrators only. Unauthorized access is prohibited.
           </div>
         </div>
 
         {/* Footer */}
         <div style={{
-          background: '#0a0a0a', borderTop: '2px solid #222',
-          padding: '10px 20px', display: 'flex', justifyContent: 'space-between',
-          fontSize: 9, fontWeight: 700, letterSpacing: 2, color: '#444', textTransform: 'uppercase',
+          background: 'var(--primary-tint)', borderTop: '1px solid var(--border-color)',
+          padding: '12px 20px', display: 'flex', justifyContent: 'space-between',
+          fontSize: 9, fontWeight: 700, letterSpacing: '1px', color: 'var(--text-muted)', textTransform: 'uppercase',
         }}>
           <span>CAMPUSCONNECT ADMIN</span>
           <span>v1.0</span>

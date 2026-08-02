@@ -104,53 +104,57 @@ const ResetPassword = () => {
     // Loading while extracting token
     if (tokenLoading) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--white)' }}>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)' }}>
                 <div style={{ textAlign: 'center' }}>
                     <Loader2 size={40} className="animate-spin" style={{ color: 'var(--yellow)', marginBottom: '16px' }} />
-                    <p style={{ fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>VERIFYING LINK...</p>
+                    <p style={{ fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>VERIFYING LINK...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--white)', padding: isMobile ? '0' : '40px 24px' }}>
-            {!isMobile && <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '8px', background: 'var(--yellow)' }} />}
-
-            <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: '440px' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: isMobile ? '0' : '40px 24px' }}>
+            <div className="animate-fade-in-up" style={{
+                width: '100%', maxWidth: '440px',
+                border: isMobile ? 'none' : 'var(--border-thick)',
+                borderRadius: isMobile ? 'none' : '24px',
+                boxShadow: isMobile ? 'none' : 'var(--shadow-lg)',
+                overflow: 'hidden'
+            }}>
                 {done ? (
                     /* ── Success ── */
-                    <div style={{ border: isMobile ? 'none' : 'var(--border-thick)', boxShadow: isMobile ? 'none' : 'var(--shadow-lg)' }}>
-                        <div style={{ background: 'var(--green)', padding: isMobile ? '28px 20px' : '36px', borderBottom: '5px solid var(--black)', textAlign: 'center' }}>
+                    <div>
+                        <div style={{ background: 'var(--primary-tint)', padding: isMobile ? '28px 20px' : '36px', borderBottom: '1px solid var(--border-color)', textAlign: 'center' }}>
                             <div style={{ fontSize: '52px', marginBottom: '12px' }}>🎉</div>
-                            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '22px', fontWeight: '700', color: 'var(--black)', textTransform: 'uppercase' }}>
+                            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '22px', fontWeight: '800', color: 'var(--yellow)', textTransform: 'uppercase' }}>
                                 PASSWORD RESET!
                             </h1>
                         </div>
                         <div style={{ background: 'var(--white)', padding: pad, textAlign: 'center' }}>
-                            <p style={{ fontSize: '13px', lineHeight: '1.7', marginBottom: '24px' }}>
+                            <p style={{ fontSize: '13px', lineHeight: '1.7', marginBottom: '24px', fontFamily: "'Outfit', sans-serif", color: 'var(--text-muted)', fontWeight: '600' }}>
                                 Your password has been updated. Redirecting to login...
                             </p>
-                            <Link to="/login" className="btn-brand" style={{ display: 'inline-flex', justifyContent: 'center', padding: '14px 24px', fontSize: '12px' }}>
+                            <Link to="/login" className="btn-brand" style={{ display: 'inline-flex', justifyContent: 'center', padding: '14px 24px', fontSize: '12px', borderRadius: '12px', boxShadow: 'var(--clay-btn-shadow)' }}>
                                 GO TO LOGIN →
                             </Link>
                         </div>
                     </div>
                 ) : (
-                    <div style={{ border: isMobile ? 'none' : 'var(--border-thick)', boxShadow: isMobile ? 'none' : 'var(--shadow-lg)' }}>
+                    <div>
                         {/* Header */}
                         <div style={{
-                            background: 'var(--black)', padding: isMobile ? '28px 20px' : '32px 36px',
-                            borderBottom: '5px solid var(--yellow)',
+                            background: 'var(--primary-tint)', padding: isMobile ? '28px 20px' : '32px 36px',
+                            borderBottom: '1px solid var(--border-color)',
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                                <div style={{ width: '44px', height: '44px', background: 'var(--yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <GraduationCap size={24} color="var(--black)" />
+                                <div style={{ width: '44px', height: '44px', background: 'var(--yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', flexShrink: 0, boxShadow: 'var(--clay-btn-shadow)' }}>
+                                    <GraduationCap size={24} color="#ffffff" />
                                 </div>
                                 <div>
-                                    <div style={{ fontSize: '10px', letterSpacing: '3px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase', marginBottom: '2px' }}>SET NEW PASSWORD</div>
-                                    <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '22px', fontWeight: '700', color: 'var(--yellow)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-                                        RESET<span style={{ color: 'var(--white)' }}> PASSWORD</span>
+                                    <div style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px', fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>SET NEW PASSWORD</div>
+                                    <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '22px', fontWeight: '800', color: 'var(--yellow)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+                                        RESET<span style={{ color: 'var(--black)' }}> PASSWORD</span>
                                     </h1>
                                 </div>
                             </div>
@@ -164,7 +168,7 @@ const ResetPassword = () => {
                                     <div className="error-banner" style={{ marginBottom: '24px', justifyContent: 'center' }}>
                                         <AlertCircle size={14} /> {error}
                                     </div>
-                                    <Link to="/forgot-password" className="btn-brand" style={{ display: 'inline-flex', padding: '14px 24px', fontSize: '12px' }}>
+                                    <Link to="/forgot-password" className="btn-brand" style={{ display: 'inline-flex', padding: '14px 24px', fontSize: '12px', borderRadius: '12px', boxShadow: 'var(--clay-btn-shadow)' }}>
                                         REQUEST NEW LINK →
                                     </Link>
                                 </div>
@@ -177,26 +181,26 @@ const ResetPassword = () => {
 
                                     {/* New password */}
                                     <div>
-                                        <label className="field-label">New Password</label>
+                                        <label className="field-label" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>New Password</label>
                                         <div style={{ position: 'relative' }}>
-                                            <Lock size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(10,10,10,0.4)', pointerEvents: 'none' }} />
+                                            <Lock size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                             <input className="input-field" type={showPass ? 'text' : 'password'}
                                                 value={form.password}
                                                 onChange={e => { setForm(p => ({ ...p, password: e.target.value })); setError(''); }}
                                                 placeholder="Min. 6 characters"
                                                 required autoFocus disabled={loading}
-                                                style={{ paddingLeft: '38px', paddingRight: '42px' }} />
+                                                style={{ paddingLeft: '38px', paddingRight: '42px', fontFamily: "'Inter', sans-serif" }} />
                                             <button type="button" onClick={() => setShowPass(!showPass)}
-                                                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--text-muted)' }}>
                                                 {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                                             </button>
                                         </div>
                                         {form.password && (
                                             <div style={{ marginTop: '8px', display: 'flex', gap: '4px', alignItems: 'center' }}>
                                                 {[1, 2, 3].map(i => (
-                                                    <div key={i} style={{ flex: 1, height: '5px', border: '2px solid var(--black)', background: passStrength >= i ? strengthColors[passStrength] : 'transparent', transition: 'background 0.2s' }} />
+                                                    <div key={i} style={{ flex: 1, height: '6px', border: '1px solid var(--border-color)', borderRadius: '3px', background: passStrength >= i ? strengthColors[passStrength] : 'transparent', transition: 'background 0.2s' }} />
                                                 ))}
-                                                <span style={{ fontSize: '9px', letterSpacing: '2px', fontWeight: '700', color: strengthColors[passStrength], marginLeft: '8px', minWidth: '44px' }}>
+                                                <span style={{ fontSize: '9px', letterSpacing: '1px', fontWeight: '700', color: strengthColors[passStrength], marginLeft: '8px', minWidth: '44px', fontFamily: "'Outfit', sans-serif" }}>
                                                     {strengthLabels[passStrength]}
                                                 </span>
                                             </div>
@@ -205,15 +209,16 @@ const ResetPassword = () => {
 
                                     {/* Confirm */}
                                     <div>
-                                        <label className="field-label">Confirm Password</label>
+                                        <label className="field-label" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>Confirm Password</label>
                                         <div style={{ position: 'relative' }}>
-                                            <Lock size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(10,10,10,0.4)', pointerEvents: 'none' }} />
+                                            <Lock size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                             <input className="input-field" type={showPass ? 'text' : 'password'}
                                                 value={form.confirm}
                                                 onChange={e => { setForm(p => ({ ...p, confirm: e.target.value })); setError(''); }}
                                                 placeholder="Repeat password" required disabled={loading}
                                                 style={{
                                                     paddingLeft: '38px',
+                                                    fontFamily: "'Inter', sans-serif",
                                                     borderColor: form.confirm ? (form.confirm === form.password ? 'var(--green)' : 'var(--red)') : undefined,
                                                 }} />
                                             {form.confirm && (
@@ -227,7 +232,7 @@ const ResetPassword = () => {
                                     </div>
 
                                     <button type="submit" className="btn-brand"
-                                        style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '12px' }}
+                                        style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '12px', borderRadius: '12px', boxShadow: 'var(--clay-btn-shadow)' }}
                                         disabled={loading}>
                                         {loading ? <><Loader2 size={15} className="animate-spin" /> RESETTING...</> : 'SET NEW PASSWORD →'}
                                     </button>
@@ -236,9 +241,13 @@ const ResetPassword = () => {
                         </div>
 
                         <div style={{
-                            background: 'var(--yellow)', padding: '10px 16px',
-                            font: "700 10px/1 'Space Mono', monospace",
-                            letterSpacing: '3px', display: 'flex', justifyContent: 'space-between',
+                            background: 'var(--primary-tint)', padding: '12px 20px',
+                            borderTop: '1px solid var(--border-color)',
+                            fontSize: '10px',
+                            fontFamily: "'Outfit', sans-serif",
+                            fontWeight: '700',
+                            letterSpacing: '1.5px', display: 'flex', justifyContent: 'space-between',
+                            color: 'var(--text-muted)',
                         }}>
                             <span>SECURE RESET</span><span>🔐</span>
                         </div>

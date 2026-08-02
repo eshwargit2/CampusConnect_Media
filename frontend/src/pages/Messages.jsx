@@ -780,18 +780,18 @@ const Messages = () => {
                                         </div>
                                     ) : messages.length === 0 ? (
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '30px 20px' }}>
-                                            <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--text-body) 30%, transparent)', fontWeight: '700', fontFamily: "'Space Mono', monospace" }}>NO MESSAGES YET</p>
+                                            <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', fontFamily: "'Outfit', sans-serif" }}>NO MESSAGES YET</p>
                                             <p style={{ fontSize: '20px' }}>👋</p>
-                                            <p style={{ fontSize: '12px', color: 'color-mix(in srgb, var(--text-body) 40%, transparent)', fontFamily: "'Space Grotesk', sans-serif" }}>Say hello to {partner?.username}!</p>
+                                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif" }}>Say hello to {partner?.username}!</p>
                                         </div>
                                     ) : Object.entries(groupedMessages).map(([key, dayMsgs]) => (
                                         <React.Fragment key={key}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '10px 0 6px' }}>
-                                                <div style={{ flex: 1, height: '1px', background: 'color-mix(in srgb, var(--text-body) 8%, transparent)' }} />
-                                                <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'color-mix(in srgb, var(--text-body) 30%, transparent)', fontWeight: '700', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>
+                                                <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                                                <span style={{ fontSize: '9px', letterSpacing: '1.5px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
                                                     {dateLabel(key)}
                                                 </span>
-                                                <div style={{ flex: 1, height: '1px', background: 'color-mix(in srgb, var(--text-body) 8%, transparent)' }} />
+                                                <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
                                             </div>
                                             {dayMsgs.map((msg, idx) => (
                                                 <MessageBubble
@@ -814,7 +814,7 @@ const Messages = () => {
                                 {/* On mobile: position fixed so keyboard doesn't push it offscreen */}
                                 {/* On desktop: normal flex child at bottom of column */}
                                 <div style={{
-                                    borderTop: '3px solid var(--black)',
+                                    borderTop: '1px solid var(--border-color)',
                                     background: 'var(--bg-body)', color: 'var(--text-body)',
                                     display: 'flex', alignItems: 'flex-end',
                                     flexShrink: 0,
@@ -847,7 +847,7 @@ const Messages = () => {
                                             padding: isMobile ? '14px 14px' : '14px 18px',
                                             /* 16px prevents iOS auto-zoom on focus */
                                             fontSize: isMobile ? '16px' : '13px',
-                                            fontFamily: "'Space Grotesk', sans-serif",
+                                            fontFamily: "'Inter', sans-serif",
                                             lineHeight: '1.5', background: 'transparent',
                                             color: 'var(--text-body)',
                                             minHeight: `${INPUT_BAR_HEIGHT}px`,
@@ -860,15 +860,15 @@ const Messages = () => {
                                         onClick={sendMessage}
                                         disabled={!text.trim() || sending}
                                         style={{
-                                            background: text.trim() ? 'var(--black)' : 'color-mix(in srgb, var(--text-body) 7%, transparent)',
-                                            border: 'none', borderLeft: '3px solid var(--black)',
-                                            color: text.trim() ? 'var(--yellow)' : 'color-mix(in srgb, var(--text-body) 20%, transparent)',
+                                            background: text.trim() ? 'var(--primary-tint)' : 'transparent',
+                                            border: 'none', borderLeft: '1px solid var(--border-color)',
+                                            color: text.trim() ? 'var(--yellow)' : 'var(--text-muted)',
                                             width: isMobile ? '58px' : 'auto',
                                             padding: isMobile ? '0' : '0 20px',
                                             minHeight: `${INPUT_BAR_HEIGHT}px`,
                                             cursor: text.trim() ? 'pointer' : 'default',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                                            fontFamily: "'Space Mono', monospace", fontSize: '11px',
+                                            fontFamily: "'Outfit', sans-serif", fontSize: '11px',
                                             fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase',
                                             transition: 'background 0.15s, color 0.15s',
                                             flexShrink: 0,

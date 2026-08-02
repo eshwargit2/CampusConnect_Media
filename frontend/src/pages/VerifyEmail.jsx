@@ -65,22 +65,26 @@ const VerifyEmail = () => {
     const pad = isMobile ? '24px 20px' : '36px';
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--white)', padding: isMobile ? '0' : '40px 24px' }}>
-            {!isMobile && <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '8px', background: 'var(--yellow)' }} />}
-
-            <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: '440px' }}>
-                <div style={{ border: isMobile ? 'none' : 'var(--border-thick)', boxShadow: isMobile ? 'none' : 'var(--shadow-lg)' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: isMobile ? '0' : '40px 24px' }}>
+            <div className="animate-fade-in-up" style={{
+                width: '100%', maxWidth: '440px',
+                border: isMobile ? 'none' : 'var(--border-thick)',
+                borderRadius: isMobile ? 'none' : '24px',
+                boxShadow: isMobile ? 'none' : 'var(--shadow-lg)',
+                overflow: 'hidden'
+            }}>
+                <div>
 
                     {/* ── Header ── */}
-                    <div style={{ background: 'var(--black)', padding: isMobile ? '24px 20px' : '28px 36px', borderBottom: '5px solid var(--yellow)' }}>
+                    <div style={{ background: 'var(--primary-tint)', padding: isMobile ? '24px 20px' : '28px 36px', borderBottom: '1px solid var(--border-color)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ width: '44px', height: '44px', background: 'var(--yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <GraduationCap size={24} color="var(--black)" />
+                            <div style={{ width: '44px', height: '44px', background: 'var(--yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', flexShrink: 0, boxShadow: 'var(--clay-btn-shadow)' }}>
+                                <GraduationCap size={24} color="#ffffff" />
                             </div>
                             <div>
-                                <div style={{ fontSize: '10px', letterSpacing: '3px', color: 'rgba(245,240,232,0.4)', textTransform: 'uppercase', marginBottom: '2px' }}>EMAIL VERIFICATION</div>
-                                <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: '700', color: 'var(--yellow)', textTransform: 'uppercase', letterSpacing: '-0.5px', margin: 0 }}>
-                                    VERIFY <span style={{ color: 'var(--white)' }}>ACCOUNT</span>
+                                <div style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px', fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>EMAIL VERIFICATION</div>
+                                <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '20px', fontWeight: '800', color: 'var(--yellow)', textTransform: 'uppercase', letterSpacing: '-0.5px', margin: 0 }}>
+                                    VERIFY <span style={{ color: 'var(--black)' }}>ACCOUNT</span>
                                 </h1>
                             </div>
                         </div>
@@ -93,7 +97,7 @@ const VerifyEmail = () => {
                         {status === 'verifying' && (
                             <div style={{ textAlign: 'center', padding: '20px 0' }}>
                                 <Loader2 size={44} className="animate-spin" style={{ color: 'var(--yellow)', marginBottom: '16px' }} />
-                                <p style={{ fontSize: '12px', letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
+                                <p style={{ fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>
                                     Verifying your email...
                                 </p>
                             </div>
@@ -103,10 +107,10 @@ const VerifyEmail = () => {
                         {status === 'success' && (
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: '52px', marginBottom: '12px' }}>🎉</div>
-                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: '700', color: 'var(--black)', textTransform: 'uppercase', marginBottom: '12px' }}>
+                                <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '20px', fontWeight: '800', color: 'var(--black)', textTransform: 'uppercase', marginBottom: '12px' }}>
                                     EMAIL VERIFIED!
                                 </h2>
-                                <p style={{ fontSize: '13px', lineHeight: '1.7', color: 'rgba(10,10,10,0.6)', marginBottom: '24px' }}>
+                                <p style={{ fontSize: '13px', lineHeight: '1.7', color: 'var(--text-muted)', marginBottom: '24px', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                                     Your account is now active. Redirecting you to the feed…
                                 </p>
                                 <Loader2 size={20} className="animate-spin" style={{ color: 'var(--yellow)' }} />
@@ -121,15 +125,15 @@ const VerifyEmail = () => {
                                     <span>{error}</span>
                                 </div>
 
-                                <p style={{ fontSize: '12px', color: 'rgba(10,10,10,0.5)', marginBottom: '20px', lineHeight: '1.7' }}>
+                                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: '1.7', fontFamily: "'Outfit', sans-serif" }}>
                                     Enter your email below and we'll send you a new verification link:
                                 </p>
 
                                 <form onSubmit={handleResend} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                     <div>
-                                        <label className="field-label">Email Address</label>
+                                        <label className="field-label" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>Email Address</label>
                                         <div style={{ position: 'relative' }}>
-                                            <Mail size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(10,10,10,0.4)', pointerEvents: 'none' }} />
+                                            <Mail size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                             <input
                                                 className="input-field"
                                                 type="email"
@@ -137,20 +141,20 @@ const VerifyEmail = () => {
                                                 onChange={e => setResendEmail(e.target.value)}
                                                 placeholder="you@gmail.com"
                                                 required
-                                                style={{ paddingLeft: '38px' }}
+                                                style={{ paddingLeft: '38px', fontFamily: "'Inter', sans-serif" }}
                                                 disabled={resendLoading}
                                             />
                                         </div>
                                     </div>
 
                                     {resendMsg && (
-                                        <div style={{ fontSize: '12px', color: resendMsg.includes('sent') ? 'var(--green)' : 'var(--red)', fontWeight: '700', padding: '8px 12px', border: `2px solid ${resendMsg.includes('sent') ? 'var(--green)' : 'var(--red)'}`, background: resendMsg.includes('sent') ? '#e8fff4' : '#fff0f0' }}>
+                                        <div style={{ fontSize: '12px', color: resendMsg.includes('sent') ? 'var(--green)' : 'var(--red)', fontWeight: '700', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${resendMsg.includes('sent') ? 'var(--green)' : 'var(--red)'}`, background: resendMsg.includes('sent') ? '#e8fff4' : '#fff0f0', fontFamily: "'Outfit', sans-serif" }}>
                                             {resendMsg}
                                         </div>
                                     )}
 
                                     <button type="submit" className="btn-brand"
-                                        style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '12px' }}
+                                        style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '12px', borderRadius: '12px', boxShadow: 'var(--clay-btn-shadow)' }}
                                         disabled={resendLoading}>
                                         {resendLoading
                                             ? <><Loader2 size={14} className="animate-spin" /> SENDING...</>
@@ -160,7 +164,7 @@ const VerifyEmail = () => {
                                 </form>
 
                                 <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                                    <Link to="/login" style={{ fontSize: '12px', color: 'var(--black)', fontWeight: '700', textDecoration: 'underline' }}>
+                                    <Link to="/login" style={{ fontSize: '12px', color: 'var(--yellow)', fontWeight: '700', textDecoration: 'none', fontFamily: "'Outfit', sans-serif" }}>
                                         ← Back to Login
                                     </Link>
                                 </div>
@@ -170,17 +174,17 @@ const VerifyEmail = () => {
                         {/* RESENT SUCCESS */}
                         {status === 'resent' && (
                             <div style={{ textAlign: 'center' }}>
-                                <CheckCircle size={48} color="var(--black)" style={{ marginBottom: '16px' }} />
-                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '18px', fontWeight: '700', color: 'var(--black)', textTransform: 'uppercase', marginBottom: '12px' }}>
+                                <CheckCircle size={48} color="var(--yellow)" style={{ marginBottom: '16px' }} />
+                                <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '18px', fontWeight: '800', color: 'var(--black)', textTransform: 'uppercase', marginBottom: '12px' }}>
                                     CHECK YOUR EMAIL
                                 </h2>
-                                <p style={{ fontSize: '13px', lineHeight: '1.7', color: 'rgba(10,10,10,0.6)', marginBottom: '8px' }}>
+                                <p style={{ fontSize: '13px', lineHeight: '1.7', color: 'var(--text-muted)', marginBottom: '8px', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                                     A new verification link has been sent. It expires in <strong>24 hours</strong>.
                                 </p>
-                                <p style={{ fontSize: '12px', color: 'rgba(10,10,10,0.4)', marginBottom: '24px' }}>
+                                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '24px', fontFamily: "'Outfit', sans-serif" }}>
                                     Don't see it? Check your spam folder.
                                 </p>
-                                <Link to="/login" className="btn-ghost" style={{ display: 'inline-flex', padding: '12px 24px', fontSize: '11px' }}>
+                                <Link to="/login" className="btn-ghost" style={{ display: 'inline-flex', padding: '12px 24px', fontSize: '11px', borderRadius: '10px' }}>
                                     ← BACK TO LOGIN
                                 </Link>
                             </div>
@@ -189,9 +193,13 @@ const VerifyEmail = () => {
 
                     {/* ── Footer tag ── */}
                     <div style={{
-                        background: 'var(--yellow)', padding: '10px 16px',
-                        font: "700 10px/1 'Space Mono', monospace",
-                        letterSpacing: '3px', display: 'flex', justifyContent: 'space-between',
+                        background: 'var(--primary-tint)', padding: '12px 20px',
+                        borderTop: '1px solid var(--border-color)',
+                        fontSize: '10px',
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: '700',
+                        letterSpacing: '1.5px', display: 'flex', justifyContent: 'space-between',
+                        color: 'var(--text-muted)',
                     }}>
                         <span>EMAIL VERIFICATION</span><span>✅</span>
                     </div>
