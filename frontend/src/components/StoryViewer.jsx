@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, Trash2, Eye, Clock, Send, Heart, Edit2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Eye, Clock, Send, Heart, Edit2, Maximize2, Minimize2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
@@ -59,6 +59,7 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
     const [storyImageFit, setStoryImageFit] = useState('cover');
     const [mediaLoaded, setMediaLoaded] = useState(false);
     const [mediaVisible, setMediaVisible] = useState(false);
+    const [showSpinner, setShowSpinner] = useState(false);
 
     const timerRef = useRef(null);
     const startTimeRef = useRef(null);
@@ -104,32 +105,44 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
         mediaLoadedRef.current = mediaLoaded;
     }, [mediaLoaded]);
 
+    // Preload assets for the current group
+    useEffect(() => {
+        if (currentGroup?.stories) {
+            currentGroup.stories.forEach(story => {
+                if (story.image_url) {
+                    if (story.image_url.includes('/video/')) {
+                        const video = document.createElement('video');
+                        video.src = story.image_url;
+                        video.preload = 'auto';
+                    } else {
+                        const img = new Image();
+                        img.src = story.image_url;
+                    }
+                }
+            });
+        }
+    }, [groupIdx, currentGroup?.stories]);
+
     useEffect(() => {
         setMediaLoaded(false);
         setMediaVisible(false);
         mediaLoadedRef.current = false;
-        minLoadDelayDoneRef.current = false;
+        setShowSpinner(false);
 
-        if (loadDelayTimeoutRef.current) {
-            clearTimeout(loadDelayTimeoutRef.current);
-        }
-
-        loadDelayTimeoutRef.current = setTimeout(() => {
-            minLoadDelayDoneRef.current = true;
-            setMediaVisible((currentVisible) => currentVisible || mediaLoadedRef.current);
-        }, STORY_MIN_LOAD_MS);
-
-        return () => {
-            if (loadDelayTimeoutRef.current) {
-                clearTimeout(loadDelayTimeoutRef.current);
-                loadDelayTimeoutRef.current = null;
+        // Show spinner only if asset takes more than 300ms to load (prevents spinner flashing)
+        const spinnerTimeout = setTimeout(() => {
+            if (!mediaLoadedRef.current) {
+                setShowSpinner(true);
             }
-        };
+        }, 300);
+
+        return () => clearTimeout(spinnerTimeout);
     }, [currentStory?.id]);
 
     useEffect(() => {
-        if (mediaLoaded && minLoadDelayDoneRef.current) {
+        if (mediaLoaded) {
             setMediaVisible(true);
+            setShowSpinner(false);
         }
     }, [mediaLoaded]);
 
@@ -140,8 +153,21 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
             return;
         }
 
+        const imgRatio = naturalWidth / naturalHeight;
+        const containerWidth = Math.min(window.innerWidth, 440);
+        const containerHeight = window.innerHeight;
+        const containerRatio = containerWidth / containerHeight;
+
+        // Auto contain landscape images & extremely tall portrait images (e.g. screenshots)
+        // standard portrait ratios look best using 'cover'
         const isLandscape = naturalWidth > naturalHeight;
-        setStoryImageFit(isLandscape ? 'contain' : 'cover');
+        const isExtremelyTall = imgRatio < (containerRatio * 0.7);
+
+        if (isLandscape || isExtremelyTall) {
+            setStoryImageFit('contain');
+        } else {
+            setStoryImageFit('cover');
+        }
         setMediaLoaded(true);
     };
 
@@ -323,17 +349,8 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
         }}>
             {/* Prev button */}
             {(groupIdx > 0 || storyIdx > 0) && (
-                <button onClick={goPrev} style={{
-                    position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 10, background: 'rgba(255,224,0,0.15)',
-                    border: '2px solid var(--yellow)', color: 'var(--yellow)',
-                    cursor: 'pointer', padding: '12px 8px',
-                    display: 'flex', transition: 'all 0.2s',
-                }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--yellow)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,224,0,0.15)'}
-                >
-                    <ChevronLeft size={20} />
+                <button onClick={goPrev} className="story-nav-btn" style={{ left: '16px' }} title="Previous Story">
+                    <ChevronLeft size={22} strokeWidth={2.5} />
                 </button>
             )}
 
@@ -400,41 +417,49 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                         {isOwner && (
                             <>
-                                <button onClick={() => { setIsEditing(true); setEditCaption(currentStory.caption || ''); }} style={{
-                                    background: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.5)',
-                                    color: 'white', cursor: 'pointer', width: '32px', height: '32px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}><Edit2 size={14} /></button>
-                                <button onClick={() => setShowDeleteConfirm(true)} style={{
-                                    background: 'rgba(255,0,0,0.2)', border: '2px solid rgba(255,100,100,0.5)',
-                                    color: '#ff6b6b', cursor: 'pointer', width: '32px', height: '32px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}><Trash2 size={14} /></button>
-                                <button onClick={loadViewers} style={{
-                                    background: 'rgba(255,224,0,0.2)', border: '2px solid rgba(255,224,0,0.5)',
-                                    color: 'var(--yellow)', cursor: 'pointer', width: '32px', height: '32px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    position: 'relative',
-                                }}>
-                                    <Eye size={14} />
+                                <button 
+                                    onClick={() => { setIsEditing(true); setEditCaption(currentStory.caption || ''); }} 
+                                    className="story-header-btn"
+                                    title="Edit Caption"
+                                >
+                                    <Edit2 size={15} strokeWidth={2} />
+                                </button>
+                                <button 
+                                    onClick={() => setShowDeleteConfirm(true)} 
+                                    className="story-header-btn delete-btn"
+                                    title="Delete Story"
+                                >
+                                    <Trash2 size={15} strokeWidth={2} />
+                                </button>
+                                <button 
+                                    onClick={loadViewers} 
+                                    className="story-header-btn viewers-btn"
+                                    title="Views"
+                                >
+                                    <Eye size={15} strokeWidth={2} />
                                     {currentStory.views_count > 0 && (
-                                        <span style={{
-                                            position: 'absolute', top: '-6px', right: '-6px',
-                                            background: 'var(--yellow)', color: 'var(--black)',
-                                            fontSize: '8px', fontWeight: '700', padding: '1px 4px', lineHeight: '1.3',
-                                        }}>{currentStory.views_count}</span>
+                                        <span className="story-views-badge">{currentStory.views_count}</span>
                                     )}
                                 </button>
                             </>
                         )}
-                        <button onClick={onClose} style={{
-                            background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.3)',
-                            color: 'white', cursor: 'pointer', width: '32px', height: '32px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}><X size={14} /></button>
+                        <button 
+                            onClick={() => setStoryImageFit(fit => fit === 'cover' ? 'contain' : 'cover')}
+                            className="story-header-btn"
+                            title={storyImageFit === 'cover' ? 'Fit to Screen' : 'Fill Screen'}
+                        >
+                            {storyImageFit === 'cover' ? (
+                                <Minimize2 size={15} strokeWidth={2} />
+                            ) : (
+                                <Maximize2 size={15} strokeWidth={2} />
+                            )}
+                        </button>
+                        <button onClick={onClose} className="story-header-btn" title="Close">
+                            <X size={15} strokeWidth={2} />
+                        </button>
                     </div>
                 </div>
 
@@ -489,16 +514,20 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                             background: '#000',
                             zIndex: 2,
                         }}>
-                            <div className="spinner" style={{ width: '30px', height: '30px', borderTopColor: 'var(--yellow)' }} />
-                            <p style={{
-                                color: 'rgba(255,255,255,0.8)',
-                                fontFamily: "'Space Mono', monospace",
-                                fontSize: '10px',
-                                letterSpacing: '2px',
-                                textTransform: 'uppercase',
-                            }}>
-                                Loading story...
-                            </p>
+                            {showSpinner && (
+                                <>
+                                    <div className="spinner" style={{ width: '30px', height: '30px', borderTopColor: 'var(--yellow)' }} />
+                                    <p style={{
+                                        color: 'rgba(255,255,255,0.8)',
+                                        fontFamily: "'Space Mono', monospace",
+                                        fontSize: '10px',
+                                        letterSpacing: '2px',
+                                        textTransform: 'uppercase',
+                                    }}>
+                                        Loading...
+                                    </p>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
@@ -585,21 +614,13 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
 
                 {/* Owner view-count button */}
                 {isOwner && (
-                    <button onClick={loadViewers} style={{
-                        position: 'absolute', bottom: '76px', left: '50%',
-                        transform: 'translateX(-50%)', zIndex: 5,
-                        background: 'rgba(10,10,10,0.7)', border: '2px solid rgba(255,255,255,0.2)',
-                        color: 'white', cursor: 'pointer',
-                        padding: '5px 14px', display: 'flex', alignItems: 'center', gap: '10px',
-                        fontSize: '10px', fontWeight: '700', letterSpacing: '2px',
-                        textTransform: 'uppercase', fontFamily: "'Space Mono', monospace",
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Eye size={12} color="var(--yellow)" /> {currentStory.views_count}
+                    <button onClick={loadViewers} className="story-owner-views-btn" title="View Story Stats">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Eye size={14} color="var(--yellow)" strokeWidth={2} /> {currentStory.views_count}
                         </div>
-                        <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.2)' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Heart size={12} fill="#ff3c5a" color="#ff3c5a" /> {currentStory.likes_count}
+                        <div style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.15)' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Heart size={14} fill="#ff3c5a" color="#ff3c5a" strokeWidth={0} /> {currentStory.likes_count}
                         </div>
                     </button>
                 )}
@@ -624,65 +645,45 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                     >
                         {/* Quick emoji reactions row */}
                         <div style={{
-                            display: 'flex', gap: '6px',
-                            marginBottom: '8px',
+                            display: 'flex', gap: '8px',
+                            marginBottom: '10px',
                             justifyContent: 'center',
                             opacity: replyFocused ? 0 : 1,
-                            maxHeight: replyFocused ? '0px' : '40px',
+                            maxHeight: replyFocused ? '0px' : '48px',
                             overflow: 'hidden',
-                            transition: 'opacity 0.2s, max-height 0.2s',
+                            transition: 'opacity 0.25s ease, max-height 0.25s ease',
                         }}>
                             {QUICK_REACTIONS.map(emoji => (
                                 <button
                                     key={emoji}
                                     onClick={() => sendReaction(emoji)}
-                                    style={{
-                                        background: 'rgba(255,255,255,0.12)',
-                                        border: '1.5px solid rgba(255,255,255,0.2)',
-                                        borderRadius: '50%',
-                                        width: '38px', height: '38px',
-                                        fontSize: '18px',
-                                        cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        transition: 'transform 0.15s, background 0.15s',
-                                        WebkitTapHighlightColor: 'transparent',
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.25)'; e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                                    className="reaction-btn"
                                 >{emoji}</button>
                             ))}
                         </div>
 
                         {/* Text input row */}
                         <div style={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
+                            display: 'flex', alignItems: 'center', gap: '10px',
                         }}>
                             {/* My avatar */}
                             {user?.profile_image ? (
                                 <img src={user.profile_image} alt=""
-                                    style={{ width: '30px', height: '30px', border: '2px solid rgba(255,255,255,0.4)', objectFit: 'cover', flexShrink: 0 }} />
+                                    style={{ width: '32px', height: '32px', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                             ) : (
                                 <div style={{
-                                    width: '30px', height: '30px', flexShrink: 0,
-                                    background: 'var(--yellow)', border: '2px solid rgba(255,255,255,0.4)',
+                                    width: '32px', height: '32px', flexShrink: 0,
+                                    background: 'var(--yellow)', border: '1.5px solid rgba(255,255,255,0.3)',
+                                    borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontWeight: '700', fontSize: '13px', color: 'var(--black)',
+                                    fontWeight: '700', fontSize: '14px', color: 'var(--black)',
                                 }}>
                                     {user?.username?.charAt(0).toUpperCase()}
                                 </div>
                             )}
 
                             {/* Input */}
-                            <div style={{
-                                flex: 1,
-                                display: 'flex', alignItems: 'center',
-                                border: replyFocused
-                                    ? '2px solid var(--yellow)'
-                                    : '2px solid rgba(255,255,255,0.35)',
-                                background: 'rgba(255,255,255,0.08)',
-                                transition: 'border-color 0.2s',
-                                overflow: 'hidden',
-                            }}>
+                            <div className={`story-input-container ${replyFocused ? 'focused' : ''}`}>
                                 <input
                                     ref={replyInputRef}
                                     type="text"
@@ -701,8 +702,7 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                                         border: 'none', outline: 'none',
                                         color: 'white',
                                         fontFamily: "'Space Grotesk', sans-serif",
-                                        fontSize: '13px', padding: '10px 12px',
-                                        '::placeholder': { color: 'rgba(255,255,255,0.4)' },
+                                        fontSize: '13px', padding: '10px 14px',
                                     }}
                                 />
                             </div>
@@ -710,29 +710,18 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                             {/* ❤️ Like button */}
                             <button
                                 onClick={handleLike}
-                                style={{
-                                    background: liked ? 'rgba(255,60,90,0.2)' : 'rgba(255,255,255,0.08)',
-                                    border: '2px solid ' + (liked ? 'rgba(255,60,90,0.7)' : 'rgba(255,255,255,0.25)'),
-                                    color: liked ? '#ff3c5a' : 'rgba(255,255,255,0.6)',
-                                    width: '42px', height: '42px',
-                                    display: 'flex', flexDirection: 'column',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    cursor: 'pointer', flexShrink: 0, gap: '1px',
-                                    transition: 'background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s',
-                                    transform: likeAnimating ? 'scale(1.35)' : 'scale(1)',
-                                    WebkitTapHighlightColor: 'transparent',
-                                }}
+                                className={`story-like-btn ${liked ? 'liked' : ''}`}
+                                title={liked ? 'Unlike' : 'Like'}
                             >
                                 <Heart
-                                    size={17}
-                                    fill={liked ? '#ff3c5a' : 'none'}
-                                    stroke={liked ? '#ff3c5a' : 'rgba(255,255,255,0.6)'}
+                                    size={18}
+                                    fill={liked ? '#ef4444' : 'none'}
+                                    stroke={liked ? '#ef4444' : 'currentColor'}
                                     strokeWidth={2}
                                 />
                                 {likesCount > 0 && (!currentGroup.user.hide_likes || isOwner) && (
                                     <span style={{
-                                        fontSize: '8px', fontWeight: '700', lineHeight: 1,
-                                        color: liked ? '#ff3c5a' : 'rgba(255,255,255,0.5)',
+                                        fontSize: '8px', fontWeight: '700', marginTop: '1px',
                                         fontFamily: "'Space Mono', monospace",
                                     }}>{likesCount > 999 ? '999+' : likesCount}</span>
                                 )}
@@ -742,22 +731,14 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                             <button
                                 onClick={() => sendReply()}
                                 disabled={!replyText.trim() || replySending}
-                                style={{
-                                    background: replyText.trim() ? 'var(--yellow)' : 'rgba(255,255,255,0.1)',
-                                    border: '2px solid ' + (replyText.trim() ? 'var(--yellow)' : 'rgba(255,255,255,0.2)'),
-                                    color: replyText.trim() ? 'var(--black)' : 'rgba(255,255,255,0.3)',
-                                    width: '38px', height: '38px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    cursor: replyText.trim() ? 'pointer' : 'default',
-                                    flexShrink: 0,
-                                    transition: 'background 0.15s, color 0.15s, border-color 0.15s',
-                                    WebkitTapHighlightColor: 'transparent',
-                                }}
+                                className={`story-send-btn ${replyText.trim() ? 'active' : ''}`}
+                                title="Send Reply"
                             >
-                                {replySending
-                                    ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: 'rgba(0,0,0,0.2)', borderTopColor: 'var(--black)' }} />
-                                    : <Send size={15} />
-                                }
+                                {replySending ? (
+                                    <div className="spinner" style={{ width: '14px', height: '14px', borderColor: 'rgba(255,255,255,0.2)', borderTopColor: '#ffffff' }} />
+                                ) : (
+                                    <Send size={15} strokeWidth={2} />
+                                )}
                             </button>
                         </div>
                     </div>
@@ -766,17 +747,8 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
 
             {/* Next button */}
             {(groupIdx < storyGroups.length - 1 || storyIdx < currentGroup.stories.length - 1) && (
-                <button onClick={goNext} style={{
-                    position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 10, background: 'rgba(255,224,0,0.15)',
-                    border: '2px solid var(--yellow)', color: 'var(--yellow)',
-                    cursor: 'pointer', padding: '12px 8px',
-                    display: 'flex', transition: 'all 0.2s',
-                }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--yellow)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,224,0,0.15)'}
-                >
-                    <ChevronRight size={20} />
+                <button onClick={goNext} className="story-nav-btn" style={{ right: '16px' }} title="Next Story">
+                    <ChevronRight size={22} strokeWidth={2.5} />
                 </button>
             )}
 
@@ -947,12 +919,264 @@ const StoryViewer = ({ storyGroups, initialGroupIndex = 0, onClose }) => {
                 </div>
             )}
 
-            {/* Float-up keyframes injected once */}
+            {/* Custom Styles and Keyframes */}
             <style>{`
                 @keyframes floatUp {
                     0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
                     60%  { opacity: 1; transform: translateX(-50%) translateY(-60px) scale(1.3); }
                     100% { opacity: 0; transform: translateX(-50%) translateY(-110px) scale(0.9); }
+                }
+
+                @keyframes badgePulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.15); }
+                    100% { transform: scale(1); }
+                }
+
+                @keyframes heartbeat {
+                    0% { transform: scale(1); }
+                    30% { transform: scale(1.3); }
+                    60% { transform: scale(0.85); }
+                    100% { transform: scale(1); }
+                }
+
+                .story-nav-btn {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    z-index: 10;
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.08);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    color: #ffffff;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .story-nav-btn:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                    border-color: rgba(255, 255, 255, 0.35);
+                    transform: translateY(-50%) scale(1.1);
+                    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+                }
+                .story-nav-btn:active {
+                    transform: translateY(-50%) scale(0.95);
+                }
+
+                .story-header-btn {
+                    background: rgba(255, 255, 255, 0.08);
+                    backdrop-filter: blur(8px);
+                    -webkit-backdrop-filter: blur(8px);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    color: #ffffff;
+                    cursor: pointer;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    position: relative;
+                }
+                .story-header-btn:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                    border-color: rgba(255, 255, 255, 0.35);
+                    transform: scale(1.1);
+                }
+                .story-header-btn:active {
+                    transform: scale(0.95);
+                }
+
+                .story-header-btn.delete-btn {
+                    background: rgba(239, 68, 68, 0.12);
+                    border-color: rgba(239, 68, 68, 0.25);
+                    color: #ef4444;
+                }
+                .story-header-btn.delete-btn:hover {
+                    background: rgba(239, 68, 68, 0.25);
+                    border-color: rgba(239, 68, 68, 0.45);
+                    color: #f87171;
+                    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+                }
+
+                .story-header-btn.viewers-btn {
+                    background: rgba(59, 130, 246, 0.12);
+                    border-color: rgba(59, 130, 246, 0.25);
+                    color: var(--yellow);
+                }
+                .story-header-btn.viewers-btn:hover {
+                    background: rgba(59, 130, 246, 0.25);
+                    border-color: rgba(59, 130, 246, 0.45);
+                    color: #60a5fa;
+                    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+                }
+
+                .story-views-badge {
+                    position: absolute;
+                    top: -5px;
+                    right: -5px;
+                    background: var(--yellow);
+                    color: #ffffff;
+                    font-size: 8px;
+                    font-weight: 800;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    border: 1.5px solid #0a0a0a;
+                    line-height: 1;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    animation: badgePulse 2s infinite;
+                }
+
+                .reaction-btn {
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    font-size: 20px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.25s, border-color 0.25s;
+                    backdrop-filter: blur(8px);
+                    -webkit-backdrop-filter: blur(8px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                    outline: none;
+                }
+                .reaction-btn:hover {
+                    transform: scale(1.25) translateY(-4px);
+                    background: rgba(255, 255, 255, 0.2);
+                    border-color: rgba(255, 255, 255, 0.35);
+                }
+                .reaction-btn:active {
+                    transform: scale(0.95);
+                }
+
+                .story-input-container {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    border-radius: 24px;
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    background: rgba(255, 255, 255, 0.06);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    transition: all 0.25s ease;
+                    overflow: hidden;
+                    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+                }
+                .story-input-container.focused {
+                    border-color: var(--yellow);
+                    background: rgba(255, 255, 255, 0.1);
+                    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 10px rgba(59, 130, 246, 0.25);
+                }
+
+                .story-like-btn {
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    color: rgba(255, 255, 255, 0.6);
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    backdrop-filter: blur(8px);
+                    -webkit-backdrop-filter: blur(8px);
+                    outline: none;
+                }
+                .story-like-btn:hover {
+                    background: rgba(255, 255, 255, 0.18);
+                    border-color: rgba(255, 255, 255, 0.3);
+                    color: #ffffff;
+                    transform: scale(1.1);
+                }
+                .story-like-btn.liked {
+                    background: rgba(239, 68, 68, 0.12);
+                    border-color: rgba(239, 68, 68, 0.4);
+                    color: #ef4444;
+                    animation: heartbeat 0.4s ease;
+                }
+                .story-like-btn.liked:hover {
+                    background: rgba(239, 68, 68, 0.2);
+                    border-color: rgba(239, 68, 68, 0.5);
+                    color: #ff6b6b;
+                }
+
+                .story-send-btn {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: rgba(255, 255, 255, 0.3);
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: default;
+                    flex-shrink: 0;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    backdrop-filter: blur(8px);
+                    -webkit-backdrop-filter: blur(8px);
+                    outline: none;
+                }
+                .story-send-btn.active {
+                    background: var(--yellow);
+                    border-color: var(--yellow);
+                    color: #ffffff;
+                    cursor: pointer;
+                }
+                .story-send-btn.active:hover {
+                    transform: scale(1.1) rotate(5deg);
+                    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+                }
+                .story-send-btn.active:active {
+                    transform: scale(0.95);
+                }
+
+                .story-owner-views-btn {
+                    position: absolute;
+                    bottom: 76px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 5;
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    color: white;
+                    cursor: pointer;
+                    border-radius: 24px;
+                    padding: 8px 18px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    font-family: "'Space Mono', monospace";
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    outline: none;
+                }
+                .story-owner-views-btn:hover {
+                    background: rgba(255, 255, 255, 0.18);
+                    border-color: rgba(255, 255, 255, 0.3);
+                    transform: translateX(-50%) scale(1.05);
                 }
             `}</style>
         </div>,

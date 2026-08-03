@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
             likes_count:story_likes(count)
         `)
         .gt('created_at', cutoff)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
     if (error) {
         console.error('Fetch stories error:', error);
@@ -93,6 +93,8 @@ router.get('/', async (req, res) => {
                 latestAt: story.created_at,
             });
         }
+        // Update latestAt to the latest story's created_at (since loop is ascending, last is newest)
+        userMap.get(userId).latestAt = story.created_at;
 
         const enrichedStory = {
             id: story.id,
