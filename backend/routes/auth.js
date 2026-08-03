@@ -12,6 +12,11 @@ const router = express.Router();
 // Value: { attempts: number, lockUntil: number }
 const loginAttempts = new Map();
 
+// In-memory store for pending OTP registrations (expires in 10 minutes)
+// Key: email (lowercased)
+// Value: { username: string, passwordHash: string, bio: string, otp: string, expiresAt: number }
+const pendingRegistrations = new Map();
+
 function checkLoginLock(email) {
     const emailKey = email.toLowerCase().trim();
     const record = loginAttempts.get(emailKey);
@@ -88,6 +93,140 @@ function resetEmailHtml(username, resetLink) {
       </div>
     </div>`;
 }
+
+function otpEmailHtml(otp) {
+    return `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0a0a0a;">
+      <div style="background:#FFE000;padding:24px 32px;border-bottom:5px solid #0a0a0a;">
+        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0a0a0a;text-transform:uppercase;letter-spacing:2px;">
+          🎓 CAMPUS<span style="color:#333;">CONNECT</span>
+        </h1>
+      </div>
+      <div style="padding:32px;color:#f5f0e8;">
+        <h2 style="font-size:18px;margin:0 0 16px;color:#FFE000;text-transform:uppercase;">Email Verification</h2>
+        <p style="font-size:14px;line-height:1.7;margin:0 0 24px;color:#ccc;">
+          Thank you for signing up for CampusConnect! Please use the following One-Time Password (OTP) to verify your email and complete your registration:
+        </p>
+        <div style="background:#1a1a1a;padding:20px;text-align:center;border:2px dashed #FFE000;margin-bottom:24px;">
+          <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#FFE000;font-family:'Courier New',monospace;">${otp}</span>
+        </div>
+        <p style="font-size:12px;line-height:1.7;margin:24px 0 0;color:#888;">
+          This OTP is valid for <strong>10 minutes</strong>. If you did not request this verification, please ignore this email.
+        </p>
+      </div>
+      <div style="background:#FFE000;padding:12px 32px;text-align:center;">
+        <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:3px;color:#0a0a0a;text-transform:uppercase;">
+          CAMPUSCONNECT — VERIFICATION
+        </p>
+      </div>
+    </div>`;
+}
+
+// ─── REGISTER SEND OTP ───────────────────────────────────────────────────
+router.post('/register-send-otp', async (req, res) => {
+    const { email, username, password, bio } = req.body;
+
+    if (!email || !username || !password)
+        return res.status(400).json({ error: 'Email, username and password are required' });
+
+    if (!email.toLowerCase().endsWith(`@${ALLOWED_DOMAIN}`))
+        return res.status(400).json({ error: `Only @${ALLOWED_DOMAIN} email addresses are allowed` });
+
+    const hasMinLength = password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+        return res.status(400).json({
+            error: 'Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.'
+        });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const cleanUsername = username.trim();
+
+    // Check database to verify username/email are not taken
+    const { data: existingEmail } = await supabase.from('users').select('id').eq('email', normalizedEmail).single();
+    if (existingEmail) return res.status(409).json({ error: 'An account with this email already exists' });
+
+    const { data: existingUsername } = await supabase.from('users').select('id').ilike('username', cleanUsername);
+    if (existingUsername && existingUsername.length > 0) return res.status(409).json({ error: 'Username is already taken' });
+
+    // Hash password before saving to in-memory store
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Generate 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    pendingRegistrations.set(normalizedEmail, {
+        username: cleanUsername,
+        passwordHash,
+        bio: bio || '',
+        otp,
+        expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
+    });
+
+    try {
+        await sendEmail({
+            to: normalizedEmail,
+            subject: '🔐 Verify Your CampusConnect Account',
+            html: otpEmailHtml(otp),
+        });
+        console.log(`📧 Registration OTP sent to: ${normalizedEmail}`);
+        res.json({ message: 'OTP sent successfully! Check your inbox.' });
+    } catch (mailErr) {
+        console.error('Email send error:', mailErr.message);
+        res.status(500).json({ error: 'Could not send verification email. Please try again.' });
+    }
+});
+
+// ─── REGISTER VERIFY OTP ─────────────────────────────────────────────────
+router.post('/register-verify-otp', async (req, res) => {
+    const { email, otp } = req.body;
+
+    if (!email || !otp)
+        return res.status(400).json({ error: 'Email and OTP are required' });
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const pending = pendingRegistrations.get(normalizedEmail);
+
+    if (!pending)
+        return res.status(400).json({ error: 'No verification request found. Please request a new OTP.' });
+
+    if (pending.expiresAt < Date.now()) {
+        pendingRegistrations.delete(normalizedEmail);
+        return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    if (pending.otp !== otp.trim())
+        return res.status(400).json({ error: 'Incorrect OTP. Please try again.' });
+
+    // OTP verified successfully. Now create the user in the database.
+    const { data: newUser, error } = await supabase
+        .from('users')
+        .insert({
+            email: normalizedEmail,
+            username: pending.username,
+            password_hash: pending.passwordHash,
+            bio: pending.bio,
+            profile_image: null,
+        })
+        .select('id, email, username, bio, profile_image, created_at')
+        .single();
+
+    if (error) {
+        console.error('DB insert error:', error);
+        return res.status(500).json({ error: 'Failed to create account. Please try again.' });
+    }
+
+    // Clean up pending registration
+    pendingRegistrations.delete(normalizedEmail);
+
+    const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.status(201).json({ user: newUser, token });
+});
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {

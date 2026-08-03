@@ -51,6 +51,14 @@ export const AuthProvider = ({ children }) => {
         return data;
     }, []);
 
+    const registerVerifyOtp = useCallback(async (email, otp) => {
+        const { data } = await api.post('/auth/register-verify-otp', { email, otp });
+        localStorage.setItem('cc_token', data.token);
+        localStorage.setItem('cc_user', JSON.stringify(data.user));
+        setUser(data.user);
+        return data;
+    }, []);
+
     const logout = useCallback(() => {
         localStorage.removeItem('cc_token');
         localStorage.removeItem('cc_user');
@@ -66,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, loading, login, register, registerVerifyOtp, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );
