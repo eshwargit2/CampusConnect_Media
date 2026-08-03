@@ -16,6 +16,22 @@ const Login = () => {
     const [attemptsLeft, setAttemptsLeft] = useState(null);
     const [remainingSeconds, setRemainingSeconds] = useState(0);
 
+    // Redirect if it's a password recovery flow landing on login page
+    useEffect(() => {
+        const hash = window.location.hash.substring(1);
+        const searchParams = new URLSearchParams(window.location.search);
+        
+        const hashParams = new URLSearchParams(hash);
+        const type = hashParams.get('type') || searchParams.get('type');
+        const hasAccessToken = hashParams.get('access_token');
+        const hasCode = searchParams.get('code');
+        const hasError = hashParams.get('error') || searchParams.get('error') || hashParams.get('error_code') || searchParams.get('error_code');
+
+        if (type === 'recovery' || hasAccessToken || hasError || (hasCode && window.location.href.includes('recovery'))) {
+            navigate(`/reset-password${window.location.search}${window.location.hash}`, { replace: true });
+        }
+    }, [navigate]);
+
     // Read lockout from localStorage when email changes
     useEffect(() => {
         const emailKey = `cc_lockout_${form.email.toLowerCase().trim()}`;

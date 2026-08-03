@@ -249,10 +249,11 @@ router.post('/forgot-password', async (req, res) => {
         return res.status(500).json({ error: 'Failed to initiate reset. Try again.' });
     }
 
+    const origin = (req.headers.origin || FRONTEND_URL).replace(/\/$/, '');
     const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email: normalizedEmail,
-        options: { redirectTo: `${FRONTEND_URL}/reset-password` },
+        options: { redirectTo: `${origin}/reset-password` },
     });
 
     if (linkErr || !linkData?.properties?.action_link) {
