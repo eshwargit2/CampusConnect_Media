@@ -18,14 +18,25 @@ const Register = () => {
 
     const handleChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); setError(''); };
     const emailValid = form.email.toLowerCase().endsWith(`@${DOMAIN}`);
-    const passStrength = form.password.length >= 10 ? 3 : form.password.length >= 6 ? 2 : form.password.length > 0 ? 1 : 0;
+
+    const hasMinLength = form.password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(form.password);
+    const hasLowercase = /[a-z]/.test(form.password);
+    const hasNumber = /[0-9]/.test(form.password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(form.password);
+
+    const criteriaMetCount = [hasMinLength, hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
+    const passStrength = criteriaMetCount === 5 ? 3 : criteriaMetCount >= 3 ? 2 : criteriaMetCount > 0 ? 1 : 0;
     const strengthColors = ['', 'var(--red)', 'var(--yellow)', 'var(--green)'];
-    const strengthLabels = ['', 'WEAK', 'OK', 'STRONG'];
+    const strengthLabels = ['', 'WEAK', 'MEDIUM', 'STRONG'];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!emailValid) { setError(`ONLY @${DOMAIN} EMAILS ALLOWED`); return; }
-        if (form.password.length < 6) { setError('PASSWORD MIN 6 CHARACTERS'); return; }
+        if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+            setError('PASSWORD MUST MEET ALL REQUIREMENTS');
+            return;
+        }
         setLoading(true); setError('');
         try {
             await register(form.email, form.username, form.password, form.bio);
@@ -64,7 +75,7 @@ const Register = () => {
                                 </h1>
                             </div>
                             <div style={{ fontSize: '9px', letterSpacing: '1px', color: 'var(--yellow)', fontWeight: '700', textTransform: 'uppercase', textAlign: 'right', lineHeight: '1.5', flexShrink: 0, fontFamily: "'Outfit', sans-serif" }}>
-                                @{DOMAIN}<br />ONLY
+                            <br />
                             </div>
                         </div>
                     </div>
@@ -123,14 +134,37 @@ const Register = () => {
                                     </button>
                                 </div>
                                 {form.password && (
-                                    <div style={{ marginTop: '8px', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} style={{ flex: 1, height: '6px', border: '1px solid var(--border-color)', borderRadius: '3px', background: passStrength >= i ? strengthColors[passStrength] : 'transparent', transition: 'background 0.2s' }} />
-                                        ))}
-                                        <span style={{ fontSize: '9px', letterSpacing: '1px', fontWeight: '700', color: strengthColors[passStrength], marginLeft: '8px', minWidth: '44px', fontFamily: "'Outfit', sans-serif" }}>
-                                            {strengthLabels[passStrength]}
-                                        </span>
-                                    </div>
+                                    <>
+                                        <div style={{ marginTop: '8px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                            {[1, 2, 3].map(i => (
+                                                <div key={i} style={{ flex: 1, height: '6px', border: '1px solid var(--border-color)', borderRadius: '3px', background: passStrength >= i ? strengthColors[passStrength] : 'transparent', transition: 'background 0.2s' }} />
+                                            ))}
+                                            <span style={{ fontSize: '9px', letterSpacing: '1px', fontWeight: '700', color: strengthColors[passStrength], marginLeft: '8px', minWidth: '44px', fontFamily: "'Outfit', sans-serif" }}>
+                                                {strengthLabels[passStrength]}
+                                            </span>
+                                        </div>
+
+                                        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px', background: 'var(--bg-body)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                                            <div style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.5px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Outfit', sans-serif" }}>
+                                                Password Requirements:
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: hasMinLength ? 'var(--green)' : 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                                <span>{hasMinLength ? '✓' : '○'}</span> At least 8 characters
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: hasUppercase ? 'var(--green)' : 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                                <span>{hasUppercase ? '✓' : '○'}</span> One uppercase letter (A-Z)
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: hasLowercase ? 'var(--green)' : 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                                <span>{hasLowercase ? '✓' : '○'}</span> One lowercase letter (a-z)
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: hasNumber ? 'var(--green)' : 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                                <span>{hasNumber ? '✓' : '○'}</span> One number (0-9)
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: hasSpecial ? 'var(--green)' : 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                                <span>{hasSpecial ? '✓' : '○'}</span> One special character (!@#$%^&*)
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                             </div>
 
@@ -172,7 +206,7 @@ const Register = () => {
                         display: 'flex', justifyContent: 'space-between',
                         borderTop: '1px solid var(--border-color)',
                     }}>
-                        <span>ONLY @{DOMAIN}</span><span>■■■</span>
+                        <span></span><span>■■■</span>
                     </div>
                 </div>
             </div>

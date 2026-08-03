@@ -7,6 +7,36 @@ const supabase = require('../supabase');
 
 const router = express.Router();
 
+// In-memory store for failed login attempts (locks for 5 hours after 5 failed attempts)
+// Key: email (lowercased)
+// Value: { attempts: number, lockUntil: number }
+const loginAttempts = new Map();
+
+function checkLoginLock(email) {
+    const emailKey = email.toLowerCase().trim();
+    const record = loginAttempts.get(emailKey);
+    if (record && record.lockUntil && record.lockUntil > Date.now()) {
+        return { locked: true, lockUntil: record.lockUntil };
+    }
+    return { locked: false };
+}
+
+function recordLoginFailure(email) {
+    const emailKey = email.toLowerCase().trim();
+    const record = loginAttempts.get(emailKey) || { attempts: 0, lockUntil: 0 };
+    record.attempts += 1;
+    if (record.attempts >= 5) {
+        record.lockUntil = Date.now() + 5 * 60 * 60 * 1000; // 5 hours
+    }
+    loginAttempts.set(emailKey, record);
+    return record;
+}
+
+function recordLoginSuccess(email) {
+    const emailKey = email.toLowerCase().trim();
+    loginAttempts.delete(emailKey);
+}
+
 const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || 'gmail.com';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -69,8 +99,17 @@ router.post('/register', async (req, res) => {
     if (!email.toLowerCase().endsWith(`@${ALLOWED_DOMAIN}`))
         return res.status(400).json({ error: `Only @${ALLOWED_DOMAIN} email addresses are allowed` });
 
-    if (password.length < 6)
-        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const hasMinLength = password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+        return res.status(400).json({
+            error: 'Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.'
+        });
+    }
 
     const normalizedEmail = email.toLowerCase();
     const cleanUsername = username.trim();
@@ -110,16 +149,54 @@ router.post('/login', async (req, res) => {
     if (!email || !password)
         return res.status(400).json({ error: 'Email and password are required' });
 
+    const emailClean = email.toLowerCase().trim();
+
+    // Check if locked
+    const lockStatus = checkLoginLock(emailClean);
+    if (lockStatus.locked) {
+        return res.status(429).json({
+            error: 'Too many failed login attempts. This account is locked for 5 hours.',
+            lockUntil: lockStatus.lockUntil
+        });
+    }
+
     const { data: user, error } = await supabase
         .from('users')
         .select('id, email, username, bio, profile_image, password_hash, created_at')
-        .eq('email', email.toLowerCase())
+        .eq('email', emailClean)
         .single();
 
-    if (error || !user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (error || !user) {
+        const record = recordLoginFailure(emailClean);
+        if (record.attempts >= 5) {
+            return res.status(429).json({
+                error: 'Too many failed login attempts. This account is locked for 5 hours.',
+                lockUntil: record.lockUntil
+            });
+        }
+        return res.status(401).json({
+            error: 'Invalid credentials',
+            attemptsLeft: 5 - record.attempts
+        });
+    }
 
     const isValid = await bcrypt.compare(password, user.password_hash);
-    if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!isValid) {
+        const record = recordLoginFailure(emailClean);
+        if (record.attempts >= 5) {
+            return res.status(429).json({
+                error: 'Too many failed login attempts. This account is locked for 5 hours.',
+                lockUntil: record.lockUntil
+            });
+        }
+        return res.status(401).json({
+            error: 'Invalid credentials',
+            attemptsLeft: 5 - record.attempts
+        });
+    }
+
+    // Success - clear lockout state
+    recordLoginSuccess(emailClean);
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     const { password_hash, ...safeUser } = user;
@@ -207,8 +284,17 @@ router.post('/reset-password', async (req, res) => {
     if (!accessToken || !newPassword)
         return res.status(400).json({ error: 'Token and new password are required' });
 
-    if (newPassword.length < 6)
-        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const hasMinLength = newPassword.length >= 8;
+    const hasUppercase = /[A-Z]/.test(newPassword);
+    const hasLowercase = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+
+    if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+        return res.status(400).json({
+            error: 'Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.'
+        });
+    }
 
     try {
         const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser(accessToken);

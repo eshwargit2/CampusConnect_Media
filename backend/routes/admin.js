@@ -6,6 +6,36 @@ const adminMiddleware = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 
+// In-memory store for failed admin login attempts (locks for 5 hours after 5 failed attempts)
+// Key: username (lowercased)
+// Value: { attempts: number, lockUntil: number }
+const adminLoginAttempts = new Map();
+
+function checkAdminLoginLock(username) {
+    const userKey = username.toLowerCase().trim();
+    const record = adminLoginAttempts.get(userKey);
+    if (record && record.lockUntil && record.lockUntil > Date.now()) {
+        return { locked: true, lockUntil: record.lockUntil };
+    }
+    return { locked: false };
+}
+
+function recordAdminLoginFailure(username) {
+    const userKey = username.toLowerCase().trim();
+    const record = adminLoginAttempts.get(userKey) || { attempts: 0, lockUntil: 0 };
+    record.attempts += 1;
+    if (record.attempts >= 5) {
+        record.lockUntil = Date.now() + 5 * 60 * 60 * 1000; // 5 hours
+    }
+    adminLoginAttempts.set(userKey, record);
+    return record;
+}
+
+function recordAdminLoginSuccess(username) {
+    const userKey = username.toLowerCase().trim();
+    adminLoginAttempts.delete(userKey);
+}
+
 // ─── ADMIN LOGIN ───────────────────────────────────────────────────────────
 // POST /api/admin/login
 router.post('/login', async (req, res) => {
@@ -15,11 +45,32 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
+    const userClean = username.toLowerCase().trim();
+
+    // Check if locked
+    const lockStatus = checkAdminLoginLock(userClean);
+    if (lockStatus.locked) {
+        return res.status(429).json({
+            error: 'Too many failed login attempts. This account is locked for 5 hours.',
+            lockUntil: lockStatus.lockUntil
+        });
+    }
+
     const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
     if (username !== ADMIN_USERNAME) {
-        return res.status(401).json({ error: 'Invalid admin credentials' });
+        const record = recordAdminLoginFailure(userClean);
+        if (record.attempts >= 5) {
+            return res.status(429).json({
+                error: 'Too many failed login attempts. This account is locked for 5 hours.',
+                lockUntil: record.lockUntil
+            });
+        }
+        return res.status(401).json({
+            error: 'Invalid admin credentials',
+            attemptsLeft: 5 - record.attempts
+        });
     }
 
     // Support both plain-text env password and bcrypt hash
@@ -31,8 +82,21 @@ router.post('/login', async (req, res) => {
     }
 
     if (!isValid) {
-        return res.status(401).json({ error: 'Invalid admin credentials' });
+        const record = recordAdminLoginFailure(userClean);
+        if (record.attempts >= 5) {
+            return res.status(429).json({
+                error: 'Too many failed login attempts. This account is locked for 5 hours.',
+                lockUntil: record.lockUntil
+            });
+        }
+        return res.status(401).json({
+            error: 'Invalid admin credentials',
+            attemptsLeft: 5 - record.attempts
+        });
     }
+
+    // Success - clear lockout state
+    recordAdminLoginSuccess(userClean);
 
     const token = jwt.sign(
         { isAdmin: true, username: ADMIN_USERNAME },

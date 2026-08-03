@@ -11,6 +11,8 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  const [attemptsLeft, setAttemptsLeft] = useState(null);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 480);
@@ -23,8 +25,62 @@ export default function AdminLogin() {
     if (token) navigate('/admin/dashboard', { replace: true });
   }, [navigate]);
 
+  // Read lockout from localStorage when username changes
+  useEffect(() => {
+    const adminKey = `cc_lockout_admin_${form.username.toLowerCase().trim()}`;
+    const stored = localStorage.getItem(adminKey);
+    if (stored) {
+      const until = parseInt(stored, 10);
+      if (until > Date.now()) {
+        setRemainingSeconds(Math.ceil((until - Date.now()) / 1000));
+      } else {
+        localStorage.removeItem(adminKey);
+        setRemainingSeconds(0);
+      }
+    } else {
+      setRemainingSeconds(0);
+    }
+    setAttemptsLeft(null); // Reset warning attempts on username change
+  }, [form.username]);
+
+  // Timer effect for the lockout countdown
+  useEffect(() => {
+    if (remainingSeconds <= 0) return;
+    const interval = setInterval(() => {
+      const adminKey = `cc_lockout_admin_${form.username.toLowerCase().trim()}`;
+      const stored = localStorage.getItem(adminKey);
+      if (stored) {
+        const until = parseInt(stored, 10);
+        const diff = until - Date.now();
+        if (diff > 0) {
+          setRemainingSeconds(Math.ceil(diff / 1000));
+        } else {
+          localStorage.removeItem(adminKey);
+          setRemainingSeconds(0);
+          clearInterval(interval);
+        }
+      } else {
+        setRemainingSeconds(0);
+        clearInterval(interval);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [remainingSeconds, form.username]);
+
+  // Format remaining seconds into a nice string: "Hh Mm Ss"
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h}h ${m}m ${s}s`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (remainingSeconds > 0) {
+      setError(`Account is temporarily locked. Please wait ${formatTime(remainingSeconds)}.`);
+      return;
+    }
     setError('');
     setLoading(true);
     try {
@@ -34,7 +90,20 @@ export default function AdminLogin() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (!res.ok) {
+        if (data.lockUntil || res.status === 429) {
+          const until = data.lockUntil ? parseInt(data.lockUntil, 10) : (Date.now() + 5 * 60 * 60 * 1000);
+          const adminKey = `cc_lockout_admin_${form.username.toLowerCase().trim()}`;
+          localStorage.setItem(adminKey, until.toString());
+          setRemainingSeconds(Math.ceil((until - Date.now()) / 1000));
+          setAttemptsLeft(0);
+        } else if (typeof data.attemptsLeft === 'number') {
+          setAttemptsLeft(data.attemptsLeft);
+        } else {
+          setAttemptsLeft(null);
+        }
+        throw new Error(data.error || 'Login failed');
+      }
       sessionStorage.setItem('adminToken', data.token);
       sessionStorage.setItem('adminUser', JSON.stringify(data.admin));
       navigate('/admin/dashboard', { replace: true });
@@ -93,6 +162,26 @@ export default function AdminLogin() {
             Enter your admin credentials to continue
           </div>
 
+          {remainingSeconds > 0 && (
+            <div style={{
+              background: '#fff0f0', border: '1px solid #FF2D2D', color: '#FF2D2D',
+              padding: '12px 16px', fontSize: 12, fontWeight: 700, borderRadius: '8px',
+              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20,
+            }}>
+              <span>🔒</span> LOCKED: Try again in {formatTime(remainingSeconds)}
+            </div>
+          )}
+
+          {attemptsLeft !== null && attemptsLeft > 0 && (
+            <div style={{
+              background: '#FFFDF0', border: '1px solid #FFE000', color: '#856404',
+              padding: '12px 16px', fontSize: 12, fontWeight: 700, borderRadius: '8px',
+              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20,
+            }}>
+              <span>⚠️</span> WARNING: {attemptsLeft} attempts remaining before 5-hour lockout.
+            </div>
+          )}
+
           {error && (
             <div style={{
               background: '#fff0f0', border: '1px solid #FF2D2D', color: '#FF2D2D',
@@ -118,12 +207,14 @@ export default function AdminLogin() {
                   onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
                   required
                   autoComplete="username"
+                  disabled={loading || remainingSeconds > 0}
                   style={{
                     width: '100%', padding: '13px 14px 13px 42px',
                     background: 'var(--bg-body)', border: '1px solid var(--border-color)', color: 'var(--text-body)',
                     fontSize: isMobile ? 16 : 14, fontFamily: "'Inter', sans-serif",
                     outline: 'none', borderRadius: '12px', boxSizing: 'border-box',
                     transition: 'all 0.15s',
+                    opacity: (loading || remainingSeconds > 0) ? 0.7 : 1,
                   }}
                   onFocus={e => { e.target.style.borderColor = 'var(--yellow)'; }}
                   onBlur={e => { e.target.style.borderColor = 'var(--border-color)'; }}
@@ -145,12 +236,14 @@ export default function AdminLogin() {
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                   required
                   autoComplete="current-password"
+                  disabled={loading || remainingSeconds > 0}
                   style={{
                     width: '100%', padding: '13px 44px 13px 42px',
                     background: 'var(--bg-body)', border: '1px solid var(--border-color)', color: 'var(--text-body)',
                     fontSize: isMobile ? 16 : 14, fontFamily: "'Inter', sans-serif",
                     outline: 'none', borderRadius: '12px', boxSizing: 'border-box',
                     transition: 'all 0.15s',
+                    opacity: (loading || remainingSeconds > 0) ? 0.7 : 1,
                   }}
                   onFocus={e => { e.target.style.borderColor = 'var(--yellow)'; }}
                   onBlur={e => { e.target.style.borderColor = 'var(--border-color)'; }}
@@ -159,6 +252,7 @@ export default function AdminLogin() {
                   type="button"
                   onClick={() => setShowPw(v => !v)}
                   tabIndex={-1}
+                  disabled={remainingSeconds > 0}
                   style={{ position: 'absolute', right: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4, lineHeight: 1 }}
                 >
                   {showPw ? '🙈' : '👁️'}
@@ -169,18 +263,18 @@ export default function AdminLogin() {
             <button
               id="admin-login-btn"
               type="submit"
-              disabled={loading}
+              disabled={loading || remainingSeconds > 0}
               style={{
                 background: 'var(--primary-tint)', color: 'var(--yellow)', border: 'none',
                 padding: '15px 20px', fontSize: 12, fontWeight: 700, letterSpacing: '1px',
                 textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif",
-                boxShadow: 'var(--clay-btn-shadow)', cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow: 'var(--clay-btn-shadow)', cursor: (loading || remainingSeconds > 0) ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                marginTop: 8, width: '100%', borderRadius: '12px', opacity: loading ? 0.7 : 1,
+                marginTop: 8, width: '100%', borderRadius: '12px', opacity: (loading || remainingSeconds > 0) ? 0.7 : 1,
                 minHeight: 48,
               }}
             >
-              {loading ? '⏳ AUTHENTICATING...' : '🛡️ ACCESS ADMIN PANEL'}
+              {remainingSeconds > 0 ? `🔒 LOCKED (${formatTime(remainingSeconds)})` : loading ? '⏳ AUTHENTICATING...' : '🛡️ ACCESS ADMIN PANEL'}
             </button>
           </form>
 

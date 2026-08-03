@@ -21,7 +21,13 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem('cc_token');
             localStorage.removeItem('cc_user');
-            window.location.href = '/login';
+            
+            const isLoginRequest = error.config?.url?.includes('/auth/login');
+            const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/admin/login';
+            
+            if (!isLoginRequest && !isLoginPage) {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

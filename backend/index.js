@@ -4,8 +4,8 @@ require('express-async-errors');
 //tested
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
-// Routes
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
 const userRoutes = require('./routes/users');
@@ -14,6 +14,18 @@ const messageRoutes = require('./routes/messages');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
+
+// Rate limiting middleware
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // limit each IP to 200 requests per 15 minutes
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests from this IP, please try again after 15 minutes.' }
+});
+
+// Apply rate limiter to API routes
+app.use('/api', apiLimiter);
 
 // Middleware
 app.use(cors({
