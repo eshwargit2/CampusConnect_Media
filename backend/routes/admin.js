@@ -350,7 +350,7 @@ router.get('/users/:userId/posts', adminMiddleware, async (req, res) => {
     const { data: posts, error, count } = await supabase
         .from('posts')
         .select(`
-            id, image_url, caption, created_at,
+            id, image_url, image_urls, caption, created_at,
             likes(count),
             comments(count)
         `, { count: 'exact' })
