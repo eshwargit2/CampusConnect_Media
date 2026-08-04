@@ -91,11 +91,23 @@ const PDFSlideViewer = ({ url, onDoubleClick, onClick, height = '520px' }) => {
             
             const scaleHeight = (containerHeight * 0.85) / unscaledViewport.height;
             const scaleWidth = containerWidth / unscaledViewport.width;
-            const scale = Math.min(scaleHeight, scaleWidth, 2.0);
+            const baseScale = Math.min(scaleHeight, scaleWidth);
             
-            const viewport = page.getViewport({ scale: scale });
-            canvas.height = viewport.height;
+            // Support high DPI screens for crisp text and clear image rendering (minimum 3.0x scale multiplier)
+            const pixelRatio = Math.max(window.devicePixelRatio || 1, 3.0);
+            const renderScale = baseScale * pixelRatio;
+            
+            const viewport = page.getViewport({ scale: renderScale });
+            
+            // Set backing store dimensions (drawing resolution)
             canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            
+            // Set CSS display dimensions (layout size)
+            const cssWidth = unscaledViewport.width * baseScale;
+            const cssHeight = unscaledViewport.height * baseScale;
+            canvas.style.width = `${cssWidth}px`;
+            canvas.style.height = `${cssHeight}px`;
 
             const renderContext = {
                 canvasContext: ctx,
@@ -139,7 +151,7 @@ const PDFSlideViewer = ({ url, onDoubleClick, onClick, height = '520px' }) => {
             width: '100%', 
             height: height, 
             overflow: 'hidden', 
-            background: '#f8fafc', 
+            background: 'var(--bg-body)', 
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center', 
@@ -149,7 +161,17 @@ const PDFSlideViewer = ({ url, onDoubleClick, onClick, height = '520px' }) => {
                 ref={canvasRef} 
                 onClick={onClick}
                 onDoubleClick={onDoubleClick}
-                style={{ maxWidth: '100%', maxHeight: '85%', objectFit: 'contain', display: 'block', cursor: 'zoom-in' }} 
+                style={{ 
+                    maxWidth: '90%', 
+                    maxHeight: '82%', 
+                    objectFit: 'contain', 
+                    display: 'block', 
+                    cursor: 'zoom-in',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                    background: '#ffffff'
+                }} 
             />
             
             {numPages > 1 && (
@@ -170,10 +192,17 @@ const PDFSlideViewer = ({ url, onDoubleClick, onClick, height = '520px' }) => {
 
 const DocumentIframeViewer = ({ url, height = '520px' }) => {
     return (
-        <div style={{ position: 'relative', width: '100%', height: height, background: '#f8fafc' }}>
+        <div style={{ position: 'relative', width: '100%', height: height, background: 'var(--bg-body)', overflow: 'hidden' }}>
             <iframe 
                 src={`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`}
-                style={{ width: '100%', height: height, border: 'none' }}
+                style={{ 
+                    position: 'absolute',
+                    top: '-45px',
+                    left: 0,
+                    width: '100%', 
+                    height: 'calc(100% + 45px)', 
+                    border: 'none' 
+                }}
                 title="Document Viewer"
             />
             <div style={{
