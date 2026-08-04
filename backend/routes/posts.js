@@ -10,10 +10,20 @@ const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 200 * 1024 * 1024 }, // 200MB
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+        const allowedTypes = [
+            'image/',
+            'video/',
+            'application/pdf',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword'
+        ];
+        const isAllowed = allowedTypes.some(type => file.mimetype.startsWith(type) || file.mimetype === type);
+        if (isAllowed) {
             cb(null, true);
         } else {
-            cb(new Error('Only image/video files are allowed'), false);
+            cb(new Error('Only images, videos, PDFs, and Office documents are allowed'), false);
         }
     },
 });
