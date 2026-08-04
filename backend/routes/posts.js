@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
         supabase
             .from('posts')
             .select(`
-      id, image_url, caption, created_at,
+      id, image_url, image_urls, caption, created_at,
       user:users!posts_user_id_fkey(*),
       likes(count),
       comments(count)
@@ -126,11 +126,12 @@ router.get('/cloudinary-signature', authMiddleware, (req, res) => {
 });
 
 // POST /api/posts - Create a new post
-router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
+router.post('/', authMiddleware, upload.array('images', 10), async (req, res) => {
     const { caption, videoUrl } = req.body;
+    const files = req.files || [];
 
-    if (!req.file && !videoUrl) {
-        return res.status(400).json({ error: 'Media file or video URL is required' });
+    if (files.length === 0 && !videoUrl) {
+        return res.status(400).json({ error: 'Media files or video URL is required' });
     }
 
     if (!caption || caption.trim() === '') {
@@ -138,38 +139,47 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     }
 
     let imageUrl = videoUrl || '';
+    let imageUrls = [];
 
-    if (!videoUrl) {
-        const fileExt = req.file.mimetype.split('/')[1];
-        const isVideo = req.file.mimetype.startsWith('video/');
+    if (videoUrl) {
+        imageUrls.push(videoUrl);
+    } else {
+        // Upload images/videos to storage
+        for (const file of files) {
+            const fileExt = file.mimetype.split('/')[1];
+            const isVideo = file.mimetype.startsWith('video/');
 
-        if (isVideo) {
-            try {
-                const { uploadToCloudinary } = require('../cloudinary');
-                const result = await uploadToCloudinary(req.file.buffer, 'video', 'posts');
-                imageUrl = result.secure_url;
-            } catch (uploadError) {
-                console.error('Video upload error:', uploadError);
-                return res.status(500).json({ error: 'Failed to upload video' });
+            if (isVideo) {
+                try {
+                    const { uploadToCloudinary } = require('../cloudinary');
+                    const result = await uploadToCloudinary(file.buffer, 'video', 'posts');
+                    imageUrls.push(result.secure_url);
+                    if (!imageUrl) imageUrl = result.secure_url;
+                } catch (uploadError) {
+                    console.error('Video upload error:', uploadError);
+                    return res.status(500).json({ error: 'Failed to upload video' });
+                }
+            } else {
+                const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+                const fileName = `post-${req.user.id}-${uniqueId}.${fileExt}`;
+
+                // Upload image to Supabase Storage
+                const { error: uploadError } = await supabase.storage
+                    .from('posts')
+                    .upload(fileName, file.buffer, {
+                        contentType: file.mimetype,
+                        upsert: false,
+                    });
+
+                if (uploadError) {
+                    console.error('Image upload error:', uploadError);
+                    return res.status(500).json({ error: 'Failed to upload image' });
+                }
+
+                const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+                imageUrls.push(urlData.publicUrl);
+                if (!imageUrl) imageUrl = urlData.publicUrl;
             }
-        } else {
-            const fileName = `post-${req.user.id}-${Date.now()}.${fileExt}`;
-
-            // Upload image to Supabase Storage
-            const { error: uploadError } = await supabase.storage
-                .from('posts')
-                .upload(fileName, req.file.buffer, {
-                    contentType: req.file.mimetype,
-                    upsert: false,
-                });
-
-            if (uploadError) {
-                console.error('Image upload error:', uploadError);
-                return res.status(500).json({ error: 'Failed to upload image' });
-            }
-
-            const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
-            imageUrl = urlData.publicUrl;
         }
     }
 
@@ -179,10 +189,11 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
         .insert({
             user_id: req.user.id,
             image_url: imageUrl,
+            image_urls: imageUrls,
             caption: caption.trim(),
         })
         .select(`
-      id, image_url, caption, created_at,
+      id, image_url, image_urls, caption, created_at,
       user:users!posts_user_id_fkey(*)
     `)
         .single();
@@ -202,7 +213,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     // Verify ownership
     const { data: post, error } = await supabase
         .from('posts')
-        .select('id, user_id, image_url')
+        .select('id, user_id, image_url, image_urls')
         .eq('id', id)
         .single();
 
@@ -214,10 +225,25 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         return res.status(403).json({ error: 'You can only delete your own posts' });
     }
 
-    // Delete image from storage
-    const urlParts = post.image_url.split('/');
-    const storageFileName = urlParts[urlParts.length - 1];
-    await supabase.storage.from('posts').remove([storageFileName]);
+    // Delete images from storage (only for Supabase Storage objects, skip Cloudinary videos)
+    const urlsToDelete = post.image_urls && post.image_urls.length > 0 
+        ? post.image_urls 
+        : [post.image_url];
+    
+    const fileNames = urlsToDelete
+        .filter(url => url && !url.includes('cloudinary.com'))
+        .map(url => {
+            const urlParts = url.split('/');
+            return urlParts[urlParts.length - 1];
+        });
+
+    if (fileNames.length > 0) {
+        try {
+            await supabase.storage.from('posts').remove(fileNames);
+        } catch (storageError) {
+            console.error('Failed to remove post images from storage:', storageError);
+        }
+    }
 
     // Delete post (likes and comments will cascade)
     const { error: deleteError } = await supabase.from('posts').delete().eq('id', id);

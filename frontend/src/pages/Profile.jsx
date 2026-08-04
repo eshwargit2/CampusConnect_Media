@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Camera, Edit3, Save, X, UserCheck, UserPlus, Loader2, AlertCircle, Grid3X3, List, Image, MapPin, Globe, Instagram, Github, Linkedin, Twitter, Users, MessageSquare, Settings } from 'lucide-react';
+import { Camera, Edit3, Save, X, UserCheck, UserPlus, Loader2, AlertCircle, Grid3X3, List, Image, MapPin, Globe, Instagram, Github, Linkedin, Twitter, Users, MessageSquare, Settings, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot } from '../context/OnlineContext';
 import useIsMobile from '../hooks/useIsMobile';
@@ -508,6 +508,17 @@ const Profile = () => {
                                     onMouseEnter={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'scale(1.06)'; }}
                                     onMouseLeave={e => { e.currentTarget.style.filter = 'grayscale(30%)'; e.currentTarget.style.transform = 'scale(1)'; }}
                                 />
+                                {post.image_urls && post.image_urls.length > 1 && (
+                                    <div style={{
+                                        position: 'absolute', top: '12px', right: '12px',
+                                        background: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)',
+                                        color: '#ffffff', padding: '5px', borderRadius: '6px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        zIndex: 2, pointerEvents: 'none'
+                                    }}>
+                                        <Layers size={12} />
+                                    </div>
+                                )}
                                 <div style={{
                                     position: 'absolute', inset: 0, background: 'rgba(15,23,42,0)', opacity: 0,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',

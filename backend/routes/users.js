@@ -72,7 +72,7 @@ router.get('/:username', async (req, res) => {
     const { data: posts } = await supabase
         .from('posts')
         .select(`
-      id, image_url, caption, created_at,
+      id, image_url, image_urls, caption, created_at,
       likes(count),
       comments(count)
     `)

@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Trash2, Send, MoreHorizontal, Edit2, X, Users } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, Send, MoreHorizontal, Edit2, X, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot } from '../context/OnlineContext';
 import ConfirmModal from './ConfirmModal';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
+import useIsMobile from '../hooks/useIsMobile';
 
 const renderTextWithLinks = (text) => {
     if (!text) return null;
@@ -60,11 +61,50 @@ const PostCard = ({ post, onDelete }) => {
     const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
     const hasCaption = captionText.trim().length > 0;
 
+    const isMobile = useIsMobile();
+
+    // Carousel state & slides resolver
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const slides = post.image_urls && post.image_urls.length > 0 
+        ? post.image_urls 
+        : (post.image_url ? [post.image_url] : []);
+
+    // Touch swipe refs & handlers
+    const touchStartX = useRef(0);
+    const touchEndX = useRef(0);
+
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.targetTouches[0].clientX;
+        touchEndX.current = e.targetTouches[0].clientX;
+    };
+
+    const handleTouchMove = (e) => {
+        touchEndX.current = e.targetTouches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+        const threshold = 50;
+        const distance = touchStartX.current - touchEndX.current;
+        if (distance > threshold) {
+            // swipe left -> next slide
+            setCurrentSlide(prev => Math.min(slides.length - 1, prev + 1));
+        } else if (distance < -threshold) {
+            // swipe right -> prev slide
+            setCurrentSlide(prev => Math.max(0, prev - 1));
+        }
+    };
+
     useEffect(() => {
         if (!showImageModal) return;
 
         const onKeyDown = (e) => {
             if (e.key === 'Escape') setShowImageModal(false);
+            if (e.key === 'ArrowLeft') {
+                setCurrentSlide(prev => Math.max(0, prev - 1));
+            }
+            if (e.key === 'ArrowRight') {
+                setCurrentSlide(prev => Math.min(slides.length - 1, prev + 1));
+            }
         };
 
         const prevOverflow = document.body.style.overflow;
@@ -75,7 +115,7 @@ const PostCard = ({ post, onDelete }) => {
             window.removeEventListener('keydown', onKeyDown);
             document.body.style.overflow = prevOverflow;
         };
-    }, [showImageModal]);
+    }, [showImageModal, slides.length]);
 
     const handleLike = async () => {
         if (!user) return toast.error('LOGIN TO LIKE POSTS');
@@ -242,20 +282,107 @@ const PostCard = ({ post, onDelete }) => {
                 )}
             </div>
 
-            {/* Media */}
-            <div style={{ position: 'relative', borderBottom: '1px solid var(--border-color)' }}>
-                {post.image_url?.includes('/video/') ? (
-                    <video src={post.image_url} controls loop
-                        style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }}
-                        onClick={(e) => {
-                            if (e.detail === 2) handleLike(); // handle double click on video
-                        }}
-                    />
-                ) : (
-                    <img src={post.image_url} alt={post.caption}
-                        style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }}
-                        onClick={() => setShowImageModal(true)}
-                        onDoubleClick={handleLike} loading="lazy" />
+            {/* Media Carousel */}
+            <div 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--border-color)' }}
+            >
+                <div style={{
+                    display: 'flex',
+                    transform: `translateX(-${currentSlide * 100}%)`,
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    width: '100%'
+                }}>
+                    {slides.map((url, index) => {
+                        const isVideo = url?.includes('/video/') || url?.endsWith('.mp4');
+                        return (
+                            <div key={index} style={{ width: '100%', flexShrink: 0, height: '100%', maxHeight: '520px' }}>
+                                {isVideo ? (
+                                    <video src={url} controls loop
+                                        style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }}
+                                        onClick={(e) => {
+                                            if (e.detail === 2) handleLike();
+                                        }}
+                                    />
+                                ) : (
+                                    <img src={url} alt={`${captionText || 'Post slide'} - ${index + 1}`}
+                                        style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }}
+                                        onClick={() => setShowImageModal(true)}
+                                        onDoubleClick={handleLike} loading="lazy" />
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {slides.length > 1 && (
+                    <>
+                        {!isMobile && (
+                            <>
+                                <button type="button" onClick={() => setCurrentSlide(prev => Math.max(0, prev - 1))}
+                                    disabled={currentSlide === 0}
+                                    style={{
+                                        position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)',
+                                        background: 'rgba(255, 255, 255, 0.75)', border: 'none', cursor: currentSlide === 0 ? 'default' : 'pointer',
+                                        width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)', color: 'var(--black)', transition: 'all 0.2s',
+                                        opacity: currentSlide === 0 ? 0 : 1, pointerEvents: currentSlide === 0 ? 'none' : 'auto',
+                                        zIndex: 2,
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#ffffff'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'}
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button type="button" onClick={() => setCurrentSlide(prev => Math.min(slides.length - 1, prev + 1))}
+                                    disabled={currentSlide === slides.length - 1}
+                                    style={{
+                                        position: 'absolute', top: '50%', right: '16px', transform: 'translateY(-50%)',
+                                        background: 'rgba(255, 255, 255, 0.75)', border: 'none', cursor: currentSlide === slides.length - 1 ? 'default' : 'pointer',
+                                        width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)', color: 'var(--black)', transition: 'all 0.2s',
+                                        opacity: currentSlide === slides.length - 1 ? 0 : 1, pointerEvents: currentSlide === slides.length - 1 ? 'none' : 'auto',
+                                        zIndex: 2,
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#ffffff'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'}
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
+                            </>
+                        )}
+
+                        {/* Counter badge */}
+                        <div style={{
+                            position: 'absolute', top: '16px', right: '16px',
+                            background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)',
+                            padding: '4px 8px', borderRadius: '12px', color: '#ffffff',
+                            fontFamily: "'Outfit', sans-serif", fontSize: '10px', fontWeight: '700',
+                            letterSpacing: '1px', zIndex: 2
+                        }}>
+                            {currentSlide + 1} / {slides.length}
+                        </div>
+
+                        {/* Dots */}
+                        <div style={{
+                            position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)',
+                            display: 'flex', gap: '6px', zIndex: 2, background: 'rgba(15, 23, 42, 0.3)',
+                            padding: '6px 10px', borderRadius: '20px', backdropFilter: 'blur(4px)'
+                        }}>
+                            {slides.map((_, idx) => (
+                                <div key={idx} onClick={() => setCurrentSlide(idx)}
+                                    style={{
+                                        width: '6px', height: '6px', borderRadius: '50%',
+                                        background: idx === currentSlide ? 'var(--yellow)' : 'rgba(255, 255, 255, 0.5)',
+                                        cursor: 'pointer', transition: 'all 0.2s',
+                                        transform: idx === currentSlide ? 'scale(1.2)' : 'none'
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 
@@ -541,40 +668,83 @@ const PostCard = ({ post, onDelete }) => {
                         position: 'fixed',
                         inset: 0,
                         zIndex: 10000,
-                        background: '#000',
+                        background: 'rgba(0,0,0,0.95)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                     }}
                 >
-                    {post.image_url?.includes('/video/') ? (
-                        <video
-                            onClick={(e) => e.stopPropagation()}
-                            src={post.image_url}
-                            controls autoPlay
-                            style={{
-                                position: 'fixed',
-                                inset: 0,
-                                width: '100vw',
-                                height: '100vh',
-                                objectFit: 'contain',
-                                display: 'block',
-                                zIndex: 10001
-                            }}
-                        />
-                    ) : (
-                        <img
-                            onClick={() => setShowImageModal(false)}
-                            src={post.image_url}
-                            alt={post.caption}
-                            style={{
-                                position: 'fixed',
-                                inset: 0,
-                                width: '100vw',
-                                height: '100vh',
-                                objectFit: 'contain',
-                                display: 'block',
-                                cursor: 'zoom-out',
-                            }}
-                        />
-                    )}
+                    {/* Fullscreen slides wrapper */}
+                    <div 
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                        style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+                    >
+                        {slides[currentSlide]?.includes('/video/') || slides[currentSlide]?.endsWith('.mp4') ? (
+                            <video
+                                onClick={(e) => e.stopPropagation()}
+                                src={slides[currentSlide]}
+                                controls autoPlay
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    objectFit: 'contain',
+                                    zIndex: 10001
+                                }}
+                            />
+                        ) : (
+                            <img
+                                onClick={() => setShowImageModal(false)}
+                                src={slides[currentSlide]}
+                                alt={captionText}
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    objectFit: 'contain',
+                                    cursor: 'zoom-out',
+                                }}
+                            />
+                        )}
+                        
+                        {/* Fullscreen Navigation buttons */}
+                        {slides.length > 1 && !isMobile && (
+                            <>
+                                <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => Math.max(0, prev - 1)); }}
+                                    disabled={currentSlide === 0}
+                                    style={{
+                                        position: 'absolute', left: '24px', top: '50%', transform: 'translateY(-50%)',
+                                        background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        cursor: currentSlide === 0 ? 'default' : 'pointer', color: '#ffffff',
+                                        width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        opacity: currentSlide === 0 ? 0.3 : 1, transition: 'all 0.2s', zIndex: 10002
+                                    }}
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => Math.min(slides.length - 1, prev + 1)); }}
+                                    disabled={currentSlide === slides.length - 1}
+                                    style={{
+                                        position: 'absolute', right: '24px', top: '50%', transform: 'translateY(-50%)',
+                                        background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        cursor: currentSlide === slides.length - 1 ? 'default' : 'pointer', color: '#ffffff',
+                                        width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        opacity: currentSlide === slides.length - 1 ? 0.3 : 1, transition: 'all 0.2s', zIndex: 10002
+                                    }}
+                                >
+                                    <ChevronRight size={24} />
+                                </button>
+                                
+                                <div style={{
+                                    position: 'absolute', top: '24px', right: '24px',
+                                    background: 'rgba(0,0,0,0.6)', padding: '6px 12px', borderRadius: '16px',
+                                    color: '#ffffff', fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '700'
+                                }}>
+                                    {currentSlide + 1} / {slides.length}
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>,
                 document.body
             )}
