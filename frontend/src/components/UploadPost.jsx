@@ -22,22 +22,40 @@ const UploadPost = ({ onClose, onPostCreated }) => {
             // Clean up old previews to avoid leaks
             previews.forEach(p => URL.revokeObjectURL(p.url));
             setFiles([videoFile]);
-            setPreviews([{ url: URL.createObjectURL(videoFile), type: 'video' }]);
+            setPreviews([{ url: URL.createObjectURL(videoFile), type: 'video', name: videoFile.name, size: videoFile.size }]);
             setActiveIndex(0);
             toast.success('VIDEO SELECTED');
         } else {
-            // Images: allow multiple images (up to 10)
+            // Images and documents: allow up to 10
             // If the existing files contains a video, replace it entirely
             const cleanExistingFiles = files.filter(f => !f.type.startsWith('video/'));
-            const imageFiles = acceptedFiles.filter(f => f.type.startsWith('image/'));
-            const updatedFiles = [...cleanExistingFiles, ...imageFiles].slice(0, 10);
+            const acceptedDocs = acceptedFiles.filter(f => 
+                f.type.startsWith('image/') || 
+                f.type === 'application/pdf' || 
+                f.type.includes('presentation') || f.type.includes('powerpoint') || 
+                f.type.includes('word') || f.type.includes('msword')
+            );
+            const updatedFiles = [...cleanExistingFiles, ...acceptedDocs].slice(0, 10);
 
             // Clean up old previews
             previews.forEach(p => URL.revokeObjectURL(p.url));
-            const updatedPreviews = updatedFiles.map(f => ({
-                url: URL.createObjectURL(f),
-                type: 'image'
-            }));
+            const updatedPreviews = updatedFiles.map(f => {
+                let fileType = 'image';
+                if (f.type === 'application/pdf') {
+                    fileType = 'pdf';
+                } else if (f.type.includes('presentation') || f.type.includes('powerpoint')) {
+                    fileType = 'ppt';
+                } else if (f.type.includes('word') || f.type.includes('msword')) {
+                    fileType = 'doc';
+                }
+
+                return {
+                    url: URL.createObjectURL(f),
+                    type: fileType,
+                    name: f.name,
+                    size: f.size
+                };
+            });
 
             setFiles(updatedFiles);
             setPreviews(updatedPreviews);
@@ -73,7 +91,15 @@ const UploadPost = ({ onClose, onPostCreated }) => {
 
     const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
         onDrop,
-        accept: { 'image/*': [], 'video/*': [] },
+        accept: {
+            'image/*': [],
+            'video/*': [],
+            'application/pdf': ['.pdf'],
+            'application/vnd.ms-powerpoint': ['.ppt'],
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+            'application/msword': ['.doc']
+        },
         maxFiles: 10,
         disabled: loading,
         noClick: previews.length > 0 // only trigger file dialog on click when dropzone is empty
@@ -198,6 +224,30 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                             <div style={{ position: 'relative', border: 'var(--border-thick)', borderRadius: '16px', overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
                                 {previews[activeIndex]?.type === 'video' ? (
                                     <video src={previews[activeIndex]?.url} controls style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                ) : ['pdf', 'ppt', 'doc'].includes(previews[activeIndex]?.type) ? (
+                                    <div style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                        gap: '16px', padding: '24px', background: 'var(--primary-tint)', width: '100%', height: '100%',
+                                        color: 'var(--black)'
+                                    }}>
+                                        <div style={{
+                                            width: '72px', height: '72px', borderRadius: '16px', 
+                                            background: previews[activeIndex]?.type === 'pdf' ? '#ef4444' : previews[activeIndex]?.type === 'ppt' ? '#f97316' : '#3b82f6',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+                                            fontFamily: "'Space Grotesk', sans-serif", fontWeight: '800', fontSize: '18px',
+                                            boxShadow: 'var(--clay-btn-shadow)'
+                                        }}>
+                                            {previews[activeIndex]?.type.toUpperCase()}
+                                        </div>
+                                        <div style={{ textAlign: 'center', maxWidth: '80%' }}>
+                                            <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', wordBreak: 'break-all', marginBottom: '4px' }}>
+                                                {previews[activeIndex]?.name}
+                                            </p>
+                                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                                {previews[activeIndex]?.size ? `${(previews[activeIndex]?.size / (1024 * 1024)).toFixed(2)} MB` : ''}
+                                            </p>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <img src={previews[activeIndex]?.url} alt={`Preview ${activeIndex}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                 )}
@@ -265,6 +315,15 @@ const UploadPost = ({ onClose, onPostCreated }) => {
                                     }}>
                                         {p.type === 'video' ? (
                                             <video src={p.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : ['pdf', 'ppt', 'doc'].includes(p.type) ? (
+                                            <div style={{
+                                                width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: p.type === 'pdf' ? '#fee2e2' : p.type === 'ppt' ? '#ffedd5' : '#dbeafe',
+                                                color: p.type === 'pdf' ? '#ef4444' : p.type === 'ppt' ? '#f97316' : '#3b82f6',
+                                                fontFamily: "'Outfit', sans-serif", fontSize: '9px', fontWeight: '800'
+                                            }}>
+                                                {p.type.toUpperCase()}
+                                            </div>
                                         ) : (
                                             <img src={p.url} alt={`Thumbnail ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         )}

@@ -28,6 +28,167 @@ const renderTextWithLinks = (text) => {
     });
 };
 
+const PDFSlideViewer = ({ url, onDoubleClick, onClick, height = '520px' }) => {
+    const [numPages, setNumPages] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const canvasRef = useRef(null);
+    const pdfDocRef = useRef(null);
+
+    useEffect(() => {
+        let active = true;
+        setLoading(true);
+
+        const loadPdf = async () => {
+            try {
+                if (!window.pdfjsLib) {
+                    await new Promise((resolve) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+                        script.onload = () => {
+                            window.pdfjsLib = window['pdfjs-dist/build/pdf'];
+                            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+                            resolve();
+                        };
+                        document.head.appendChild(script);
+                    });
+                } else {
+                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+                }
+
+                const loadingTask = window.pdfjsLib.getDocument(url);
+                const pdf = await loadingTask.promise;
+                if (!active) return;
+                pdfDocRef.current = pdf;
+                setNumPages(pdf.numPages);
+                setLoading(false);
+                setTimeout(() => renderPage(pdf, 1), 50);
+            } catch (err) {
+                console.error("Error loading PDF: ", err);
+                if (active) setLoading(false);
+            }
+        };
+
+        loadPdf();
+
+        return () => {
+            active = false;
+        };
+    }, [url]);
+
+    const renderPage = async (pdfDoc, pageNum) => {
+        const doc = pdfDoc || pdfDocRef.current;
+        if (!doc || !canvasRef.current) return;
+        try {
+            const page = await doc.getPage(pageNum);
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            
+            // Fit inside parent container height and match width dynamically
+            const unscaledViewport = page.getViewport({ scale: 1.0 });
+            const containerHeight = canvas.parentElement ? canvas.parentElement.clientHeight : 520;
+            const containerWidth = canvas.parentElement ? canvas.parentElement.clientWidth : 600;
+            
+            const scaleHeight = (containerHeight * 0.85) / unscaledViewport.height;
+            const scaleWidth = containerWidth / unscaledViewport.width;
+            const scale = Math.min(scaleHeight, scaleWidth, 2.0);
+            
+            const viewport = page.getViewport({ scale: scale });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+        } catch (err) {
+            console.error("Error rendering PDF page: ", err);
+        }
+    };
+
+    const handlePrev = (e) => {
+        e.stopPropagation();
+        if (currentPage > 1) {
+            const nextP = currentPage - 1;
+            setCurrentPage(nextP);
+            renderPage(null, nextP);
+        }
+    };
+
+    const handleNext = (e) => {
+        e.stopPropagation();
+        if (currentPage < numPages) {
+            const nextP = currentPage + 1;
+            setCurrentPage(nextP);
+            renderPage(null, nextP);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ height: height, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary-tint)' }}>
+                <div className="spinner" style={{ width: '28px', height: '28px' }} />
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ 
+            position: 'relative', 
+            width: '100%', 
+            height: height, 
+            overflow: 'hidden', 
+            background: '#f8fafc', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+        }}>
+            <canvas 
+                ref={canvasRef} 
+                onClick={onClick}
+                onDoubleClick={onDoubleClick}
+                style={{ maxWidth: '100%', maxHeight: '85%', objectFit: 'contain', display: 'block', cursor: 'zoom-in' }} 
+            />
+            
+            {numPages > 1 && (
+                <div style={{
+                    position: 'absolute', bottom: '12px', left: '50%', transform: 'translateX(-50%)',
+                    display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(15, 23, 42, 0.75)',
+                    padding: '6px 12px', borderRadius: '20px', color: '#fff', fontSize: '10px', fontFamily: "'Outfit', sans-serif", fontWeight: '700',
+                    zIndex: 10, backdropFilter: 'blur(4px)', pointerEvents: 'auto'
+                }}>
+                    <button type="button" onClick={handlePrev} disabled={currentPage === 1} style={{ background: 'none', border: 'none', color: '#fff', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.3 : 1, outline: 'none' }}>◀</button>
+                    <span style={{ userSelect: 'none' }}>PAGE {currentPage} / {numPages}</span>
+                    <button type="button" onClick={handleNext} disabled={currentPage === numPages} style={{ background: 'none', border: 'none', color: '#fff', cursor: currentPage === numPages ? 'default' : 'pointer', opacity: currentPage === numPages ? 0.3 : 1, outline: 'none' }}>▶</button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const DocumentIframeViewer = ({ url, height = '520px' }) => {
+    return (
+        <div style={{ position: 'relative', width: '100%', height: height, background: '#f8fafc' }}>
+            <iframe 
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`}
+                style={{ width: '100%', height: height, border: 'none' }}
+                title="Document Viewer"
+            />
+            <div style={{
+                position: 'absolute', top: '12px', right: '12px',
+                background: 'rgba(15, 23, 42, 0.75)', color: '#ffffff',
+                padding: '4px 8px', borderRadius: '10px', fontSize: '9px', fontWeight: '700',
+                fontFamily: "'Outfit', sans-serif", letterSpacing: '1px', textTransform: 'uppercase',
+                zIndex: 2, pointerEvents: 'none'
+            }}>
+                DOC/PPT
+            </div>
+        </div>
+    );
+};
+
 const PostCard = ({ post, onDelete }) => {
     const { user } = useAuth();
     const [liked, setLiked] = useState(post.liked_by_me || false);
@@ -297,6 +458,10 @@ const PostCard = ({ post, onDelete }) => {
                 }}>
                     {slides.map((url, index) => {
                         const isVideo = url?.includes('/video/') || url?.endsWith('.mp4');
+                        const isPdf = url?.toLowerCase().includes('.pdf') || url?.toLowerCase().includes('/pdf');
+                        const isDoc = url?.toLowerCase().includes('.ppt') || url?.toLowerCase().includes('.pptx') || 
+                                      url?.toLowerCase().includes('.doc') || url?.toLowerCase().includes('.docx');
+
                         return (
                             <div key={index} style={{ width: '100%', flexShrink: 0, height: '100%', maxHeight: '520px' }}>
                                 {isVideo ? (
@@ -306,6 +471,10 @@ const PostCard = ({ post, onDelete }) => {
                                             if (e.detail === 2) handleLike();
                                         }}
                                     />
+                                ) : isPdf ? (
+                                    <PDFSlideViewer url={url} onDoubleClick={handleLike} onClick={() => setShowImageModal(true)} />
+                                ) : isDoc ? (
+                                    <DocumentIframeViewer url={url} />
                                 ) : (
                                     <img src={url} alt={`${captionText || 'Post slide'} - ${index + 1}`}
                                         style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }}
@@ -693,6 +862,15 @@ const PostCard = ({ post, onDelete }) => {
                                     zIndex: 10001
                                 }}
                             />
+                        ) : slides[currentSlide]?.toLowerCase().includes('.pdf') || slides[currentSlide]?.toLowerCase().includes('/pdf') ? (
+                            <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', height: '90%', zIndex: 10001 }}>
+                                <PDFSlideViewer url={slides[currentSlide]} onDoubleClick={handleLike} onClick={() => setShowImageModal(false)} />
+                            </div>
+                        ) : slides[currentSlide]?.toLowerCase().includes('.ppt') || slides[currentSlide]?.toLowerCase().includes('.pptx') || 
+                            slides[currentSlide]?.toLowerCase().includes('.doc') || slides[currentSlide]?.toLowerCase().includes('.docx') ? (
+                            <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', height: '90%', zIndex: 10001 }}>
+                                <DocumentIframeViewer url={slides[currentSlide]} />
+                            </div>
                         ) : (
                             <img
                                 onClick={() => setShowImageModal(false)}
