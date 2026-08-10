@@ -147,36 +147,39 @@ body {
   max-width: 680px;
   margin: 0 auto;
   padding: 0 24px;
-  padding-top: 104px !important;
-  padding-bottom: 80px;
+  padding-top: 24px !important;
+  padding-bottom: 104px !important;
 }
 
-/* ── NAVBAR ── */
-.navbar {
+/* ── BOTTOM NAVBAR ── */
+.bottom-navbar {
   position: fixed;
-  top: 16px !important;
+  bottom: 16px !important;
   left: 16px !important;
   right: 16px !important;
   height: 64px;
-  background: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
   border-radius: 24px !important;
-  box-shadow: 0 10px 30px rgba(166, 180, 200, 0.15), 
+  box-shadow: 0 -10px 30px rgba(166, 180, 200, 0.12), 
               inset 2px 2px 4px rgba(255, 255, 255, 0.9), 
               inset -2px -2px 4px rgba(166, 180, 200, 0.05) !important;
   z-index: 100;
-  max-width: 1080px;
+  max-width: 680px;
   margin: 0 auto !important;
   display: flex;
   align-items: center;
+  justify-content: space-around;
+  padding: 0 12px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="dark"] .navbar {
-  background: rgba(30, 41, 59, 0.8) !important;
+[data-theme="dark"] .bottom-navbar {
+  background: rgba(30, 41, 59, 0.85) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 10px 30px rgba(5, 8, 16, 0.4), 
+  box-shadow: 0 -10px 30px rgba(5, 8, 16, 0.35), 
               inset 2px 2px 4px rgba(255, 255, 255, 0.05), 
               inset -2px -2px 4px rgba(0, 0, 0, 0.2) !important;
 }
@@ -605,8 +608,8 @@ body {
 @media (max-width: 768px) {
   .page-container {
     padding: 0 16px;
-    padding-top: 96px !important;
-    padding-bottom: 40px;
+    padding-top: 20px !important;
+    padding-bottom: 96px !important;
   }
 
   .post-card {

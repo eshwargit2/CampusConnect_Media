@@ -3,12 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OnlineProvider } from './context/OnlineContext';
-import Navbar from './components/Navbar';
+import BottomNavbar from './components/BottomNavbar';
 import UploadPost from './components/UploadPost';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Feed from './pages/Feed';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Messages from './pages/Messages';
@@ -60,7 +61,7 @@ const AppContent = () => {
 
   return (
     <>
-      {user && <Navbar onUploadClick={() => setShowUpload(true)} />}
+      {user && <BottomNavbar onUploadClick={() => setShowUpload(true)} />}
 
       {showUpload && (
         <UploadPost
@@ -108,6 +109,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

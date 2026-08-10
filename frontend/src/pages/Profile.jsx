@@ -13,8 +13,6 @@ const Profile = () => {
     const { username } = useParams();
     const { user: currentUser, updateUser } = useAuth();
     const navigate = useNavigate();
-    const fileInputRef = useRef(null);
-
     const isMobile = useIsMobile();
     const [profileData, setProfileData] = useState(null);
     const [posts, setPosts] = useState([]);
@@ -23,21 +21,10 @@ const Profile = () => {
     const [isOwner, setIsOwner] = useState(false);
     const [followStatus, setFollowStatus] = useState('none');
     const [followLoading, setFollowLoading] = useState(false);
-    const [editing, setEditing] = useState(false);
-    const [editForm, setEditForm] = useState({
-        username: '', bio: '', address: '', website: '',
-        link_instagram: '', link_twitter: '', link_linkedin: '', link_github: '',
-    });
-    const [avatarFile, setAvatarFile] = useState(null);
-    const [avatarPreview, setAvatarPreview] = useState(null);
-    const [saveLoading, setSaveLoading] = useState(false);
     const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
     const [followModal, setFollowModal] = useState(null); // 'followers' | 'following' | null
     const [followList, setFollowList] = useState([]);
     const [followListLoading, setFollowListLoading] = useState(false);
-    const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
-    const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
-    const [showSettingsModal, setShowSettingsModal] = useState(false);
 
     useEffect(() => { fetchProfile(); }, [username]);
 
@@ -56,46 +43,6 @@ const Profile = () => {
         finally { setLoading(false); }
     };
 
-    const startEdit = () => {
-        setEditForm({
-            username: profileData.username,
-            bio: profileData.bio || '',
-            address: profileData.address || '',
-            website: profileData.website || '',
-            link_instagram: profileData.link_instagram || '',
-            link_twitter: profileData.link_twitter || '',
-            link_linkedin: profileData.link_linkedin || '',
-            link_github: profileData.link_github || '',
-        });
-        setAvatarFile(null); setAvatarPreview(null); setEditing(true);
-    };
-
-    const handleAvatarChange = (e) => {
-        const f = e.target.files[0]; if (!f) return;
-        setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f));
-    };
-
-    const handleSave = async () => {
-        setSaveLoading(true);
-        try {
-            const formData = new FormData();
-            formData.append('username', editForm.username);
-            formData.append('bio', editForm.bio);
-            formData.append('address', editForm.address);
-            formData.append('website', editForm.website);
-            formData.append('link_instagram', editForm.link_instagram);
-            formData.append('link_twitter', editForm.link_twitter);
-            formData.append('link_linkedin', editForm.link_linkedin);
-            formData.append('link_github', editForm.link_github);
-            if (avatarFile) formData.append('profile_image', avatarFile);
-            const { data } = await api.put('/users/profile/update', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setProfileData(prev => ({ ...prev, ...data.user }));
-            updateUser(data.user); toast.success('PROFILE UPDATED ✦'); setEditing(false);
-            if (data.user.username !== username) navigate(`/profile/${data.user.username}`, { replace: true });
-        } catch (err) { toast.error(err.response?.data?.error?.toUpperCase() || 'UPDATE FAILED'); }
-        finally { setSaveLoading(false); }
-    };
-
     const handleFollow = async () => {
         if (!currentUser) return navigate('/login');
         setFollowLoading(true);
@@ -105,21 +52,6 @@ const Profile = () => {
             setProfileData(prev => ({ ...prev, followers_count: data.following ? prev.followers_count + 1 : prev.followers_count - (followStatus === 'accepted' ? 1 : 0) }));
         } catch { toast.error('FAILED'); }
         finally { setFollowLoading(false); }
-    };
-
-    const handleDeleteAccount = async () => {
-        setDeleteAccountLoading(true);
-        try {
-            await api.delete('/users/account');
-            toast.success('ACCOUNT DELETED');
-            // Logout and redirect
-            localStorage.removeItem('token');
-            updateUser(null);
-            navigate('/login');
-        } catch (err) {
-            toast.error(err.response?.data?.error?.toUpperCase() || 'FAILED TO DELETE ACCOUNT');
-            setDeleteAccountLoading(false);
-        }
     };
 
     const handleDeletePost = (postId) => {
@@ -148,20 +80,6 @@ const Profile = () => {
         } catch { toast.error('FAILED TO PROCESS REQUEST'); }
     };
 
-    const togglePrivacy = async (field, value) => {
-        const oldValue = profileData[field];
-        setProfileData(prev => ({ ...prev, [field]: value }));
-        try {
-            const formData = new FormData();
-            formData.append(field, value);
-            await api.put('/users/profile/update', formData);
-            toast.success('SETTINGS UPDATED ✦');
-        } catch {
-            setProfileData(prev => ({ ...prev, [field]: oldValue }));
-            toast.error('FAILED TO UPDATE SETTINGS');
-        }
-    };
-
     if (loading) return (
         <div className="page-container" style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}>
             <div className="spinner" style={{ width: '48px', height: '48px' }} />
@@ -179,7 +97,7 @@ const Profile = () => {
         </div>
     );
 
-    const displayAvatar = avatarPreview || profileData.profile_image;
+    const displayAvatar = profileData.profile_image;
 
     // Social links config
     const socialLinks = [
@@ -231,49 +149,22 @@ const Profile = () => {
                                 ? <img src={displayAvatar} alt={profileData.username} className="avatar" style={{ width: '96px', height: '96px', border: '3px solid var(--white)', borderRadius: '50%', boxShadow: 'var(--shadow)' }} />
                                 : <div className="avatar-text" style={{ width: '96px', height: '96px', fontSize: '36px', border: '3px solid var(--white)', borderRadius: '50%', boxShadow: 'var(--shadow)' }}>{profileData.username?.charAt(0)}</div>
                             }
-                            {isOwner && editing && (
-                                <button onClick={() => fileInputRef.current?.click()} style={{
-                                    position: 'absolute', bottom: '-4px', right: '-4px',
-                                    background: 'var(--yellow)', border: 'none',
-                                    cursor: 'pointer', width: '30px', height: '30px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    borderRadius: '50%',
-                                    boxShadow: 'var(--clay-btn-shadow)',
-                                }}>
-                                    <Camera size={14} color="#ffffff" />
-                                </button>
-                            )}
-                            {!editing && <OnlineDot userId={profileData.id} size={14} />}
-                            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+                            <OnlineDot userId={profileData.id} size={14} />
                         </div>
 
                         {/* Action buttons */}
                         <div style={{ display: 'flex', gap: '8px', paddingBottom: '4px', flexWrap: 'wrap' }}>
                             {isOwner ? (
-                                editing ? (
-                                    <>
-                                        <button onClick={() => setEditing(false)} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }} disabled={saveLoading}>
-                                            <X size={13} /> CANCEL
+                                <>
+                                    <button onClick={() => navigate('/settings')} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }}>
+                                        <Settings size={13} /> SETTINGS
+                                    </button>
+                                    {profileData?.is_private && (
+                                        <button onClick={() => openFollowModal('requests')} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }}>
+                                            <Users size={13} /> REQUESTS
                                         </button>
-                                        <button onClick={handleSave} className="btn-brand" style={{ fontSize: '11px', padding: '8px 14px' }} disabled={saveLoading}>
-                                            {saveLoading ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} SAVE
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button onClick={startEdit} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }}>
-                                            <Edit3 size={13} /> EDIT PROFILE
-                                        </button>
-                                        {profileData?.is_private && (
-                                            <button onClick={() => openFollowModal('requests')} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }}>
-                                                <Users size={13} /> REQUESTS
-                                            </button>
-                                        )}
-                                        <button onClick={() => setShowSettingsModal(true)} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }}>
-                                            <Settings size={13} /> SETTINGS
-                                        </button>
-                                    </>
-                                )
+                                    )}
+                                </>
                             ) : (
                                 <>
                                     <button onClick={handleFollow} className={followStatus !== 'none' ? 'btn-ghost' : 'btn-brand'} style={{ fontSize: '11px', padding: '8px 14px' }} disabled={followLoading}>
@@ -289,118 +180,66 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    {/* ── EDITING FORM ── */}
-                    {editing ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: isMobile ? '100%' : '400px', marginBottom: '24px' }}>
-                            <div>
-                                <label className="field-label">Username</label>
-                                <input className="input-field" value={editForm.username}
-                                    onChange={e => setEditForm(p => ({ ...p, username: e.target.value }))}
-                                    placeholder="USERNAME" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: '700', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '1px' }} maxLength={30} />
+                    {/* ── DISPLAY MODE ── */}
+                    <div style={{ marginBottom: '24px' }}>
+                        <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '26px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '4px' }}>
+                            {profileData.username}
+                        </h1>
+
+
+                        {profileData.bio && (
+                            <p style={{ fontSize: '13px', lineHeight: '1.7', maxWidth: '400px', borderLeft: '4px solid var(--yellow)', paddingLeft: '12px', marginBottom: '14px', color: 'var(--black)' }}>
+                                {profileData.bio}
+                            </p>
+                        )}
+
+                        {(hasAddress || hasWebsite) && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '14px' }}>
+                                {hasAddress && (
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                                        <MapPin size={13} color="var(--red)" /> {profileData.address}
+                                    </span>
+                                )}
+                                {hasWebsite && (
+                                    <a href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--blue)', textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationThickness: '2px', fontWeight: '700' }}>
+                                        <Globe size={13} /> {profileData.website.replace(/^https?:\/\//, '')}
+                                    </a>
+                                )}
                             </div>
-                            <div>
-                                <label className="field-label">Bio</label>
-                                <textarea className="input-field" value={editForm.bio}
-                                    onChange={e => setEditForm(p => ({ ...p, bio: e.target.value }))}
-                                    placeholder="Tell something about yourself..." rows={2} style={{ resize: 'none' }} maxLength={150} />
-                            </div>
-                            <div>
-                                <label className="field-label">📍 Address / Location</label>
-                                <input className="input-field" value={editForm.address}
-                                    onChange={e => setEditForm(p => ({ ...p, address: e.target.value }))}
-                                    placeholder="e.g. Chennai, India" maxLength={100} />
-                            </div>
-                            <div>
-                                <label className="field-label">🌐 Website</label>
-                                <input className="input-field" value={editForm.website}
-                                    onChange={e => setEditForm(p => ({ ...p, website: e.target.value }))}
-                                    placeholder="https://yourwebsite.com" maxLength={200} />
-                            </div>
-                            <div style={{ borderTop: '3px solid var(--black)', paddingTop: '12px', marginTop: '4px' }}>
-                                <label className="field-label" style={{ marginBottom: '12px' }}>🔗 Social Links</label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {socialLinks.map(s => (
-                                        <div key={s.key} style={{ position: 'relative' }}>
-                                            <div style={{
-                                                position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)',
+                        )}
+
+                        {hasSocials && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '4px' }}>
+                                {socialLinks.map(s => {
+                                    const val = profileData[s.key];
+                                    if (!val) return null;
+                                    const url = val.startsWith('http') ? val : `${s.prefix}${val}`;
+                                    return (
+                                        <a key={s.key} href={url} target="_blank" rel="noopener noreferrer"
+                                            style={{
                                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                                color: 'rgba(10,10,10,0.4)', fontSize: '10px', fontWeight: '700',
-                                                letterSpacing: '1px', textTransform: 'uppercase',
-                                                pointerEvents: 'none',
-                                            }}>
-                                                {s.icon}
-                                            </div>
-                                            <input className="input-field" value={editForm[s.key]}
-                                                onChange={e => setEditForm(p => ({ ...p, [s.key]: e.target.value }))}
-                                                placeholder={`${s.label} username`}
-                                                style={{ paddingLeft: '34px' }} maxLength={100} />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        /* ── DISPLAY MODE ── */
-                        <div style={{ marginBottom: '24px' }}>
-                            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '26px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '4px' }}>
-                                {profileData.username}
-                            </h1>
-
-
-                            {profileData.bio && (
-                                <p style={{ fontSize: '13px', lineHeight: '1.7', maxWidth: '400px', borderLeft: '4px solid var(--yellow)', paddingLeft: '12px', marginBottom: '14px', color: 'var(--black)' }}>
-                                    {profileData.bio}
-                                </p>
-                            )}
-
-                            {(hasAddress || hasWebsite) && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '14px' }}>
-                                    {hasAddress && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                                            <MapPin size={13} color="var(--red)" /> {profileData.address}
-                                        </span>
-                                    )}
-                                    {hasWebsite && (
-                                        <a href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`}
-                                            target="_blank" rel="noopener noreferrer"
-                                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--blue)', textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationThickness: '2px', fontWeight: '700' }}>
-                                            <Globe size={13} /> {profileData.website.replace(/^https?:\/\//, '')}
+                                                background: 'var(--white)', color: s.color,
+                                                border: 'var(--border)',
+                                                padding: '6px 14px',
+                                                borderRadius: '12px',
+                                                fontFamily: "'Outfit', sans-serif",
+                                                fontSize: '11px', fontWeight: '600',
+                                                letterSpacing: '0.5px', textTransform: 'uppercase',
+                                                textDecoration: 'none', transition: 'all 0.15s',
+                                                boxShadow: 'var(--clay-btn-shadow)',
+                                            }}
+                                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-tint)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; e.currentTarget.style.transform = 'none'; }}
+                                        >
+                                            {s.icon} {val.replace(/^https?:\/\/(www\.)?(instagram\.com|x\.com|twitter\.com|linkedin\.com\/in|github\.com)\/?/, '')}
                                         </a>
-                                    )}
-                                </div>
-                            )}
-
-                            {hasSocials && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '4px' }}>
-                                    {socialLinks.map(s => {
-                                        const val = profileData[s.key];
-                                        if (!val) return null;
-                                        const url = val.startsWith('http') ? val : `${s.prefix}${val}`;
-                                        return (
-                                            <a key={s.key} href={url} target="_blank" rel="noopener noreferrer"
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                    background: 'var(--white)', color: s.color,
-                                                    border: 'var(--border)',
-                                                    padding: '6px 14px',
-                                                    borderRadius: '12px',
-                                                    fontFamily: "'Outfit', sans-serif",
-                                                    fontSize: '11px', fontWeight: '600',
-                                                    letterSpacing: '0.5px', textTransform: 'uppercase',
-                                                    textDecoration: 'none', transition: 'all 0.15s',
-                                                    boxShadow: 'var(--clay-btn-shadow)',
-                                                }}
-                                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-tint)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; e.currentTarget.style.transform = 'none'; }}
-                                            >
-                                                {s.icon} {val.replace(/^https?:\/\/(www\.)?(instagram\.com|x\.com|twitter\.com|linkedin\.com\/in|github\.com)\/?/, '')}
-                                            </a>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Stats */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', border: 'var(--border)', borderRadius: '16px', boxShadow: 'var(--clay-btn-shadow)', overflow: 'hidden' }}>
@@ -634,97 +473,7 @@ const Profile = () => {
                 </div>
             )}
 
-            {/* Settings Modal */}
-            {showSettingsModal && (
-                <div className="animate-fade-in" style={{
-                    position: 'fixed', inset: 0, zIndex: 100,
-                    background: 'rgba(15,23,42,0.6)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
-                }} onClick={e => e.target === e.currentTarget && setShowSettingsModal(false)}>
-                    <div className="animate-scale-in" style={{
-                        background: 'var(--white)', color: 'var(--black)', maxWidth: '420px', width: '100%',
-                        maxHeight: '90vh', display: 'flex', flexDirection: 'column',
-                        border: 'var(--border-thick)', borderRadius: '24px', boxShadow: 'var(--shadow-lg)',
-                        overflow: 'hidden',
-                    }}>
-                        <div style={{
-                            background: 'var(--primary-tint)', padding: '16px 20px',
-                            borderBottom: '1px solid var(--border-color)',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            flexShrink: 0,
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Settings size={14} color="var(--yellow)" />
-                                <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '700', letterSpacing: '1.5px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
-                                    SETTINGS
-                                </span>
-                            </div>
-                            <button onClick={() => setShowSettingsModal(false)} style={{ background: 'none', border: '1px solid var(--border-color)', color: 'var(--black)', cursor: 'pointer', width: '28px', height: '28px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <X size={13} />
-                            </button>
-                        </div>
-                        <div style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            {/* Privacy Section */}
-                            <div>
-                                <label className="field-label" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '16px' }}>🔒</span> PRIVACY
-                                </label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <label style={{ display: 'flex', gap: '12px', cursor: 'pointer', alignItems: 'flex-start' }}>
-                                        <input type="checkbox" checked={profileData.is_private || false} onChange={e => togglePrivacy('is_private', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--yellow)', marginTop: '2px' }} />
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '14px' }}>PRIVATE ACCOUNT</span>
-                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>If enabled, only approved followers can see your posts and stories.</span>
-                                        </div>
-                                    </label>
-                                    <label style={{ display: 'flex', gap: '12px', cursor: 'pointer', alignItems: 'flex-start' }}>
-                                        <input type="checkbox" checked={profileData.hide_likes || false} onChange={e => togglePrivacy('hide_likes', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--yellow)', marginTop: '2px' }} />
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '14px' }}>HIDE LIKE COUNTS</span>
-                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>If enabled, the total number of likes on your posts and stories will be hidden from everyone else.</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            {/* Delete Account Section */}
-                            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
-                                <label className="field-label" style={{ color: 'var(--red)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    ⚠ DANGER ZONE
-                                </label>
-                                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.6' }}>
-                                    Once you delete your account, there is no going back. All your posts, comments, and profile data will be permanently deleted.
-                                </p>
-                                <button onClick={() => { setShowSettingsModal(false); setShowDeleteAccountModal(true); }} style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                    width: '100%', padding: '14px 20px', background: 'var(--white)',
-                                    border: 'var(--border)', color: 'var(--red)', cursor: 'pointer',
-                                    fontFamily: "'Outfit', sans-serif", fontSize: '12px', fontWeight: '700',
-                                    letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s',
-                                    borderRadius: '16px', boxShadow: 'var(--clay-btn-shadow)',
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-tint)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; }}>
-                                    <AlertCircle size={15} /> DELETE ACCOUNT
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            
-            {/* Delete Account Confirmation Modal */}
-            <ConfirmModal
-                isOpen={showDeleteAccountModal}
-                onClose={() => setShowDeleteAccountModal(false)}
-                onConfirm={handleDeleteAccount}
-                title="DELETE ACCOUNT"
-                message="Are you absolutely sure you want to delete your account? This will permanently delete all your posts, comments, messages, and profile data. This action cannot be undone."
-                confirmText="DELETE ACCOUNT"
-                cancelText="CANCEL"
-                isDangerous={true}
-            />
+
         </div>
     );
 };
