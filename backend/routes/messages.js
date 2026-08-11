@@ -37,8 +37,25 @@ router.get('/', authMiddleware, async (req, res) => {
         .select('id, username, profile_image')
         .in('id', partnerIds);
 
+    const partnerUsers = users || [];
+    const counts = {};
+    if (partnerUsers.length > 0) {
+        await Promise.all(partnerUsers.map(async (u) => {
+            const { count: postCount } = await supabase
+                .from('posts')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', u.id);
+            counts[u.id] = postCount || 0;
+        }));
+    }
+
     const userMap = {};
-    (users || []).forEach(u => { userMap[u.id] = u; });
+    partnerUsers.forEach(u => {
+        userMap[u.id] = {
+            ...u,
+            posts_count: counts[u.id] || 0
+        };
+    });
 
     // Count unread per conversation
     const { data: unreadRows } = await supabase
@@ -105,7 +122,19 @@ router.get('/:partnerId', authMiddleware, async (req, res) => {
         .eq('id', partnerId)
         .single();
 
-    res.json({ messages: messages || [], partner });
+    let enrichedPartner = null;
+    if (partner) {
+        const { count: postCount } = await supabase
+            .from('posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', partnerId);
+        enrichedPartner = {
+            ...partner,
+            posts_count: postCount || 0
+        };
+    }
+
+    res.json({ messages: messages || [], partner: enrichedPartner });
 });
 
 // ─── POST /api/messages/:partnerId — Send a message ──────────────────

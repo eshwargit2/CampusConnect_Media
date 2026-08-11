@@ -95,6 +95,19 @@ router.get('/', async (req, res) => {
         }
     }
 
+    // Fetch posts_count for each author in the feed
+    const authorIds = [...new Set((posts || []).map(p => p.user?.id).filter(Boolean))];
+    const counts = {};
+    if (authorIds.length > 0) {
+        await Promise.all(authorIds.map(async (uid) => {
+            const { count: postCount } = await supabase
+                .from('posts')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', uid);
+            counts[uid] = postCount || 0;
+        }));
+    }
+
     // Enrich posts with user info and like status, and filter private posts
     const enrichedPosts = (posts || [])
         .filter(post => {
@@ -109,7 +122,14 @@ router.get('/', async (req, res) => {
         })
         .map(post => ({
             ...post,
-            user: { id: post.user.id, username: post.user.username, profile_image: post.user.profile_image, is_private: post.user.is_private, hide_likes: post.user.hide_likes },
+            user: { 
+                id: post.user.id, 
+                username: post.user.username, 
+                profile_image: post.user.profile_image, 
+                is_private: post.user.is_private, 
+                hide_likes: post.user.hide_likes,
+                posts_count: counts[post.user.id] || 0
+            },
             likes_count: post.likes?.[0]?.count ?? 0,
             comments_count: post.comments?.[0]?.count ?? 0,
             liked_by_me: userLikes.has(post.id),
@@ -413,6 +433,101 @@ router.get('/:id/likes', async (req, res) => {
     }
 
     res.json({ likes: likes ? likes.map(l => l.user) : [] });
+});
+
+// GET /api/posts/random - Get random posts (from the pool of public / followed posts)
+router.get('/random', async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Get auth user optionally
+    let currentUserId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const jwt = require('jsonwebtoken');
+        try {
+            const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+            currentUserId = decoded.userId;
+        } catch { }
+    }
+
+    // Fetch the latest 100 posts to select from
+    const { data: posts, error } = await withRetry(() =>
+        supabase
+            .from('posts')
+            .select(`
+                id, image_url, image_urls, caption, created_at,
+                user:users!posts_user_id_fkey(*),
+                likes(count),
+                comments(count)
+            `)
+            .order('created_at', { ascending: false })
+            .limit(100)
+    );
+
+    if (error) {
+        console.error('Fetch random posts error:', error);
+        return res.status(500).json({ error: 'Failed to fetch posts' });
+    }
+
+    if (!posts || posts.length === 0) {
+        return res.json({ posts: [] });
+    }
+
+    // Fetch likes by current user if authenticated
+    let userLikes = new Set();
+    if (currentUserId) {
+        const postIds = posts.map((p) => p.id);
+        const { data: likes } = await withRetry(() =>
+            supabase
+                .from('likes')
+                .select('post_id')
+                .eq('user_id', currentUserId)
+                .in('post_id', postIds)
+        );
+        if (likes) {
+            likes.forEach((l) => userLikes.add(l.post_id));
+        }
+    }
+
+    // Fetch followed user IDs if current user is authenticated
+    let followedUserIds = new Set();
+    if (currentUserId) {
+        const { data: followsData } = await withRetry(() =>
+            supabase
+                .from('follows')
+                .select('following_id')
+                .eq('follower_id', currentUserId)
+                .eq('status', 'accepted')
+        );
+        if (followsData) {
+            followsData.forEach(f => followedUserIds.add(f.following_id));
+        }
+    }
+
+    // Filter and enrich posts
+    const enrichedPosts = posts
+        .filter(post => {
+            if (!post.user?.is_private) return true;
+            if (post.user.id === currentUserId) return true;
+            if (followedUserIds.has(post.user.id)) return true;
+            return false;
+        })
+        .map(post => ({
+            ...post,
+            user: { id: post.user.id, username: post.user.username, profile_image: post.user.profile_image, is_private: post.user.is_private, hide_likes: post.user.hide_likes },
+            likes_count: post.likes?.[0]?.count ?? 0,
+            comments_count: post.comments?.[0]?.count ?? 0,
+            liked_by_me: userLikes.has(post.id),
+        }));
+
+    // Shuffle enriched posts using Fisher-Yates shuffle
+    const shuffled = [...enrichedPosts];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    res.json({ posts: shuffled.slice(0, limit) });
 });
 
 module.exports = router;

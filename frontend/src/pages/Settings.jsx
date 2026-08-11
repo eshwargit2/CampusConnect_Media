@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, Camera, Save, ArrowLeft, Loader2, AlertCircle, Shield, LogOut } from 'lucide-react';
+import { Sun, Moon, Camera, Save, ArrowLeft, Loader2, AlertCircle, Shield, LogOut, BadgeCheck } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -16,6 +16,7 @@ const Settings = () => {
     const [saveLoading, setSaveLoading] = useState(false);
     const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [posts, setPosts] = useState([]);
 
     // Profile state
     const [profile, setProfile] = useState(null);
@@ -44,6 +45,7 @@ const Settings = () => {
             .then(({ data }) => {
                 const u = data.user;
                 setProfile(u);
+                setPosts(data.posts || []);
                 setEditForm({
                     username: u.username || '',
                     bio: u.bio || '',
@@ -457,6 +459,86 @@ const Settings = () => {
                                 </span>
                             </div>
                         </label>
+                    </div>
+                </div>
+
+                {/* Creator Milestones Badges Info */}
+                <div style={{
+                    background: 'var(--white)',
+                    border: 'var(--border-thick)',
+                    borderRadius: '24px',
+                    padding: '24px',
+                    boxShadow: 'var(--shadow)',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                        <BadgeCheck size={18} color="var(--yellow)" />
+                        <label className="field-label" style={{ marginBottom: 0 }}>Creator Milestones</label>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                            Earn profile verification badges by sharing moments with the community. Badges appear next to your username on your profile page.
+                        </p>
+
+                        {/* Blue Badge milestone details */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px',
+                            background: 'var(--primary-tint)',
+                            borderRadius: '16px',
+                            border: posts.length >= 15 && posts.length < 50 ? '2px solid #3b82f6' : '1px solid var(--border-color)',
+                        }}>
+                            <BadgeCheck size={28} color="#ffffff" fill="#3b82f6" />
+                            <div>
+                                <h4 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '13px', fontWeight: '700', color: 'var(--black)' }}>
+                                    BLUE CREATOR BADGE {posts.length >= 15 ? '✓' : ''}
+                                </h4>
+                                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                    Reach 15 posts to verify your account.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Gold Badge milestone details */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px',
+                            background: 'var(--primary-tint)',
+                            borderRadius: '16px',
+                            border: posts.length >= 50 ? '2px solid #eab308' : '1px solid var(--border-color)',
+                        }}>
+                            <BadgeCheck size={28} color="#ffffff" fill="#eab308" />
+                            <div>
+                                <h4 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '13px', fontWeight: '700', color: 'var(--black)' }}>
+                                    GOLD PREMIUM BADGE {posts.length >= 50 ? '✓' : ''}
+                                </h4>
+                                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                    Reach 50 posts to upgrade to premium gold creator status.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* User progress bar */}
+                        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', fontFamily: "'Outfit', sans-serif", textTransform: 'uppercase', marginBottom: '6px' }}>
+                                <span style={{ color: 'var(--black)' }}>Your Posts: {posts.length}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>
+                                    {posts.length >= 50 ? 'Max Milestone Reached' : posts.length >= 15 ? `Next Milestone: 50` : `Next Milestone: 15`}
+                                </span>
+                            </div>
+                            <div style={{ width: '100%', height: '8px', background: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{
+                                    width: `${Math.min(100, (posts.length / (posts.length >= 15 ? 50 : 15)) * 100)}%`,
+                                    height: '100%',
+                                    background: posts.length >= 15 ? '#eab308' : '#3b82f6',
+                                    borderRadius: '4px',
+                                }} />
+                            </div>
+                        </div>
                     </div>
                 </div>
 

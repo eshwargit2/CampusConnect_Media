@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Send, ArrowLeft, MessageSquare, Search, X, User, ChevronRight, Info, Pencil, Trash2, Check } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Search, X, User, ChevronRight, Info, Pencil, Trash2, Check, BadgeCheck } from 'lucide-react';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot, useOnline } from '../context/OnlineContext';
@@ -20,6 +20,25 @@ const useIsMobile = (bp = 768) => {
 
 // ── Input bar height constant (mobile fixed bar) ───────────────────────
 const INPUT_BAR_HEIGHT = 58; // px — keep in sync with minHeight in the textarea/button
+
+const renderVerificationBadge = (postCount) => {
+    if (postCount === undefined || postCount === null) return null;
+    if (postCount >= 50) {
+        return (
+            <span title="Premium Gold Creator (50+ Posts)" style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: '4px', flexShrink: 0 }}>
+                <BadgeCheck size={14} color="#ffffff" fill="#eab308" style={{ filter: 'drop-shadow(0 1px 2px rgba(234,179,8,0.2))' }} />
+            </span>
+        );
+    }
+    if (postCount >= 15) {
+        return (
+            <span title="Verified Blue Creator (15+ Posts)" style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: '4px', flexShrink: 0 }}>
+                <BadgeCheck size={14} color="#ffffff" fill="#3b82f6" style={{ filter: 'drop-shadow(0 1px 2px rgba(59,130,246,0.2))' }} />
+            </span>
+        );
+    }
+    return null;
+};
 
 // ── Time format ───────────────────────────────────────────────────────
 const fmtTime = (ts) => {
@@ -88,8 +107,9 @@ const ProfilePanel = ({ partner, partnerId, onClose, isMobile }) => {
                         <OnlineDot userId={partnerId} size={12} />
                     </div>
 
-                    <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--black)', margin: '0 0 4px' }}>
+                    <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--black)', margin: '0 0 4px' }}>
                         {partner?.username}
+                        {renderVerificationBadge(partner?.posts_count)}
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
                         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isOnline ? 'var(--green)' : 'var(--text-muted)' }} />
@@ -431,19 +451,20 @@ const Messages = () => {
     return (
         <div style={{
             display: 'flex',
-            /* Full viewport minus navbar height (64px matches CSS .navbar) */
-            height: isMobile ? 'calc(100dvh - 64px)' : 'calc(100vh - 64px)',
-            marginTop: '64px',
-            maxWidth: isMobile ? '100%' : '1200px',
-            margin: isMobile ? '64px 0 0' : '64px auto 0',
-            border: isMobile ? 'none' : '1px solid var(--border-color)',
-            boxShadow: isMobile ? 'none' : 'var(--shadow-lg)',
-            borderRadius: isMobile ? '0' : '24px',
+            position: 'fixed',
+            top: isMobile ? '60px' : '76px',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            border: 'none',
+            boxShadow: 'none',
+            borderRadius: '0',
             background: 'var(--white)', color: 'var(--text-body)',
             overflow: 'hidden',
             /* Account for safe areas on mobile */
             paddingLeft: 'env(safe-area-inset-left, 0px)',
             paddingRight: 'env(safe-area-inset-right, 0px)',
+            zIndex: 10,
         }}>
             <style>{`
                 .msg-sidebar {
@@ -909,7 +930,10 @@ const Messages = () => {
                                         <OnlineDot userId={u.id} size={8} />
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '13px', color: 'var(--black)', textTransform: 'uppercase' }}>{u.username}</p>
+                                        <p style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '13px', color: 'var(--black)', textTransform: 'uppercase' }}>
+                                            {u.username}
+                                            {renderVerificationBadge(u.posts_count)}
+                                        </p>
                                         {u.bio && <p style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.bio}</p>}
                                     </div>
                                 </button>
@@ -917,7 +941,7 @@ const Messages = () => {
                         </div>
                     )}
 
-                    <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: isMobile ? '80px' : '0' }}>
                         {convsLoading ? (
                             <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
                                 <div className="spinner" style={{ width: '24px', height: '24px' }} />
@@ -942,8 +966,9 @@ const Messages = () => {
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
-                                            <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', color: 'var(--black)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            <p style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', color: 'var(--black)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 {conv.partner.username}
+                                                {renderVerificationBadge(conv.partner.posts_count)}
                                             </p>
                                             <span style={{ fontSize: '9px', color: 'var(--text-muted)', flexShrink: 0, fontFamily: "'Outfit', sans-serif" }}>
                                                 {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: false })}
@@ -991,11 +1016,9 @@ const Messages = () => {
                             }}>
                                 {/* Header */}
                                 <div className="chat-header">
-                                    {isMobile && (
-                                        <button onClick={() => navigate('/messages')} className="chat-back-btn">
-                                            <ArrowLeft size={18} />
-                                        </button>
-                                    )}
+                                    <button onClick={() => navigate('/messages')} className="chat-back-btn" style={{ marginRight: '8px' }}>
+                                        <ArrowLeft size={18} />
+                                    </button>
                                     <button onClick={() => setShowProfile(s => !s)} style={{
                                         flex: 1, display: 'flex', alignItems: 'center', gap: '10px',
                                         background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, minWidth: 0,
@@ -1006,8 +1029,9 @@ const Messages = () => {
                                             <OnlineDot userId={partnerId} size={9} />
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <p className="chat-partner-name">
+                                            <p className="chat-partner-name" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 {partner?.username || '...'}
+                                                {renderVerificationBadge(partner?.posts_count)}
                                             </p>
                                             <p className="chat-partner-sub">
                                                 Tap for profile
@@ -1028,65 +1052,6 @@ const Messages = () => {
                                     /* Prevent iOS bouncing from hiding input */
                                     overscrollBehavior: 'contain',
                                 }}>
-
-                                    {/* ── Partner banner at top of body (compact) ── */}
-                                    {partner && (
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            padding: '12px 16px',
-                                            background: 'var(--primary-tint)',
-                                            borderRadius: '16px',
-                                            border: '1px solid var(--border-color)',
-                                            marginBottom: '16px',
-                                            flexShrink: 0,
-                                        }}>
-                                            {/* Avatar + online dot */}
-                                            <div style={{ position: 'relative', flexShrink: 0 }}>
-                                                <Av user={partner} size={isMobile ? 36 : 40} border="1px solid var(--border-color)" />
-                                                <OnlineDot userId={partnerId} size={9} />
-                                            </div>
-
-                                            {/* Name + view profile */}
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <p style={{
-                                                    fontFamily: "'Outfit', sans-serif",
-                                                    fontWeight: '700',
-                                                    fontSize: isMobile ? '13px' : '14px',
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.8px',
-                                                    color: 'var(--black)',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    whiteSpace: 'nowrap',
-                                                    lineHeight: 1.2,
-                                                }}>
-                                                    {partner?.username}
-                                                </p>
-                                                <button
-                                                    onClick={() => setShowProfile(s => !s)}
-                                                    style={{
-                                                        background: 'none', border: 'none',
-                                                        padding: 0, cursor: 'pointer',
-                                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                                        marginTop: '2px',
-                                                        WebkitTapHighlightColor: 'transparent',
-                                                    }}
-                                                >
-                                                    <Info size={9} color="var(--text-muted)" />
-                                                    <span style={{
-                                                        fontSize: '8px',
-                                                        letterSpacing: '1px',
-                                                        fontWeight: '700',
-                                                        textTransform: 'uppercase',
-                                                        fontFamily: "'Outfit', sans-serif",
-                                                        color: 'var(--text-muted)',
-                                                    }}>View Profile</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {msgsLoading ? (
                                         <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 0' }}>
