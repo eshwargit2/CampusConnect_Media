@@ -40,7 +40,7 @@ const Feed = ({ newPost }) => {
     const handleDelete = (postId) => setPosts(prev => prev.filter(p => p.id !== postId));
 
     return (
-        <div className="page-container">
+        <div className="page-container with-top-navbar">
             {/* Stories */}
             <StoryBar
                 onOpenViewer={(groups, idx) => setViewerData({ groups, idx })}
@@ -55,34 +55,6 @@ const Feed = ({ newPost }) => {
                     onClose={() => { setViewerData(null); setStoryRefresh(k => k + 1); }}
                 />
             )}
-
-            {/* Header */}
-            <div style={{
-                background: 'var(--white)', padding: '24px 28px',
-                border: 'var(--border-thick)',
-                borderRadius: '24px',
-                boxShadow: 'var(--shadow)',
-                marginBottom: '32px',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-                <div>
-                    <div style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
-                        001 / GLOBAL FEED
-                    </div>
-                    <h1 style={{
-                        fontFamily: "'Outfit', sans-serif", fontSize: '28px', fontWeight: '800',
-                        color: 'var(--black)', letterSpacing: '-0.5px', textTransform: 'uppercase',
-                        lineHeight: '1',
-                    }}>
-                        COLLEGE<span style={{ color: 'var(--yellow)' }}>FEED</span>
-                    </h1>
-                </div>
-                <button onClick={() => fetchPosts(1, true)} className="btn-brand"
-                    style={{ padding: '10px 16px !important', fontSize: '11px' }} disabled={loading}>
-                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                    REFRESH
-                </button>
-            </div>
 
             {/* Ticker */}
             <div className="ticker-bar" style={{ border: 'var(--border)', marginBottom: '32px' }}>

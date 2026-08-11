@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Camera, Edit3, Save, X, UserCheck, UserPlus, Loader2, AlertCircle, Grid3X3, List, Image, MapPin, Globe, Instagram, Github, Linkedin, Twitter, Users, MessageSquare, Settings, Layers } from 'lucide-react';
+import { Camera, Edit3, Save, X, UserCheck, UserPlus, Loader2, AlertCircle, Grid3X3, List, Image, MapPin, Globe, Instagram, Github, Linkedin, Twitter, Users, MessageSquare, Settings, Layers, LogOut, BadgeCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot } from '../context/OnlineContext';
 import useIsMobile from '../hooks/useIsMobile';
@@ -9,9 +9,27 @@ import ConfirmModal from '../components/ConfirmModal';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 
+const renderVerificationBadge = (postCount) => {
+    if (postCount >= 50) {
+        return (
+            <span title="Premium Gold Creator (50+ Posts)" style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }}>
+                <BadgeCheck size={20} color="#ffffff" fill="#eab308" style={{ filter: 'drop-shadow(0 2px 4px rgba(234,179,8,0.2))' }} />
+            </span>
+        );
+    }
+    if (postCount >= 15) {
+        return (
+            <span title="Verified Blue Creator (15+ Posts)" style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }}>
+                <BadgeCheck size={20} color="#ffffff" fill="#3b82f6" style={{ filter: 'drop-shadow(0 2px 4px rgba(59,130,246,0.2))' }} />
+            </span>
+        );
+    }
+    return null;
+};
+
 const Profile = () => {
     const { username } = useParams();
-    const { user: currentUser, updateUser } = useAuth();
+    const { user: currentUser, updateUser, logout } = useAuth();
     const navigate = useNavigate();
     const isMobile = useIsMobile();
     const [profileData, setProfileData] = useState(null);
@@ -54,6 +72,11 @@ const Profile = () => {
         finally { setFollowLoading(false); }
     };
 
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
     const handleDeletePost = (postId) => {
         setPosts(prev => prev.filter(p => p.id !== postId));
     };
@@ -81,13 +104,13 @@ const Profile = () => {
     };
 
     if (loading) return (
-        <div className="page-container" style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}>
+        <div className="page-container" style={{ display: 'flex', justifyContent: 'center', paddingTop: '140px' }}>
             <div className="spinner" style={{ width: '48px', height: '48px' }} />
         </div>
     );
 
     if (error) return (
-        <div className="page-container" style={{ paddingTop: '60px' }}>
+        <div className="page-container" style={{ paddingTop: '100px' }}>
             <div style={{ background: 'var(--red)', border: 'var(--border-thick)', padding: '40px', textAlign: 'center', boxShadow: 'var(--shadow-lg)' }}>
                 <AlertCircle size={40} color="var(--white)" style={{ margin: '0 auto 16px', display: 'block' }} />
                 <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '24px', fontWeight: '700', color: 'var(--white)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
@@ -101,10 +124,10 @@ const Profile = () => {
 
     // Social links config
     const socialLinks = [
-        { key: 'link_instagram', label: 'Instagram', icon: <Instagram size={14} />, prefix: 'https://instagram.com/', color: '#E1306C' },
-        { key: 'link_twitter', label: 'X / Twitter', icon: <Twitter size={14} />, prefix: 'https://x.com/', color: '#fff' },
-        { key: 'link_linkedin', label: 'LinkedIn', icon: <Linkedin size={14} />, prefix: 'https://linkedin.com/in/', color: '#0077B5' },
-        { key: 'link_github', label: 'GitHub', icon: <Github size={14} />, prefix: 'https://github.com/', color: '#fff' },
+        { key: 'link_instagram', label: 'Instagram', icon: <Instagram size={14} color="#E1306C" />, prefix: 'https://instagram.com/', color: 'var(--black)' },
+        { key: 'link_twitter', label: 'X / Twitter', icon: <Twitter size={14} color="var(--black)" />, prefix: 'https://x.com/', color: 'var(--black)' },
+        { key: 'link_linkedin', label: 'LinkedIn', icon: <Linkedin size={14} color="#0077B5" />, prefix: 'https://linkedin.com/in/', color: 'var(--black)' },
+        { key: 'link_github', label: 'GitHub', icon: <Github size={14} color="var(--black)" />, prefix: 'https://github.com/', color: 'var(--black)' },
     ];
 
     const hasSocials = socialLinks.some(s => profileData[s.key]);
@@ -112,7 +135,7 @@ const Profile = () => {
     const hasAddress = !!profileData.address;
 
     return (
-        <div className="page-container">
+        <div className="page-container with-top-navbar">
             {/* Profile card */}
             <div style={{
                 background: 'var(--white)', color: 'var(--black)', border: 'var(--border-thick)',
@@ -159,6 +182,9 @@ const Profile = () => {
                                     <button onClick={() => navigate('/settings')} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }}>
                                         <Settings size={13} /> SETTINGS
                                     </button>
+                                    <button onClick={handleLogout} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px', color: 'var(--red)' }}>
+                                        <LogOut size={13} color="var(--red)" /> LOG OUT
+                                    </button>
                                     {profileData?.is_private && (
                                         <button onClick={() => openFollowModal('requests')} className="btn-ghost" style={{ fontSize: '11px', padding: '8px 14px' }}>
                                             <Users size={13} /> REQUESTS
@@ -182,8 +208,9 @@ const Profile = () => {
 
                     {/* ── DISPLAY MODE ── */}
                     <div style={{ marginBottom: '24px' }}>
-                        <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '26px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '4px' }}>
+                        <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Outfit', sans-serif", fontSize: '26px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '4px' }}>
                             {profileData.username}
+                            {renderVerificationBadge(posts.length)}
                         </h1>
 
 
@@ -191,6 +218,48 @@ const Profile = () => {
                             <p style={{ fontSize: '13px', lineHeight: '1.7', maxWidth: '400px', borderLeft: '4px solid var(--yellow)', paddingLeft: '12px', marginBottom: '14px', color: 'var(--black)' }}>
                                 {profileData.bio}
                             </p>
+                        )}
+
+                        {/* Creator Milestones Progress Card */}
+                        {isOwner && (
+                            <div style={{
+                                background: 'var(--primary-tint)',
+                                border: 'var(--border-thick)',
+                                borderRadius: '20px',
+                                padding: '16px 20px',
+                                marginBottom: '24px',
+                                maxWidth: '400px',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                    <BadgeCheck size={16} color="var(--yellow)" />
+                                    <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: 'var(--yellow)', textTransform: 'uppercase' }}>
+                                        Creator Milestones
+                                    </span>
+                                </div>
+                                {posts.length >= 50 ? (
+                                    <p style={{ fontSize: '12px', color: 'var(--black)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                        👑 GOLD CREATOR LEVEL REACHED! You have {posts.length} posts and a yellow verification badge.
+                                    </p>
+                                ) : posts.length >= 15 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <p style={{ fontSize: '12px', color: 'var(--black)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                            🔵 BLUE CREATOR VERIFIED! Progress to Gold: {posts.length} / 50 posts.
+                                        </p>
+                                        <div style={{ width: '100%', height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
+                                            <div style={{ width: `${(posts.length / 50) * 100}%`, height: '100%', background: '#eab308', borderRadius: '3px' }} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
+                                            Reach 15 posts to earn Blue Verification. Progress: {posts.length} / 15 posts.
+                                        </p>
+                                        <div style={{ width: '100%', height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
+                                            <div style={{ width: `${(posts.length / 15) * 100}%`, height: '100%', background: '#3b82f6', borderRadius: '3px' }} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
 
                         {(hasAddress || hasWebsite) && (

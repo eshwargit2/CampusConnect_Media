@@ -36,7 +36,24 @@ router.get('/search', async (req, res) => {
         return res.status(500).json({ error: 'Search failed' });
     }
 
-    res.json({ users: users || [] });
+    const searchUsers = users || [];
+    const counts = {};
+    if (searchUsers.length > 0) {
+        await Promise.all(searchUsers.map(async (u) => {
+            const { count: postCount } = await supabase
+                .from('posts')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', u.id);
+            counts[u.id] = postCount || 0;
+        }));
+    }
+
+    const enrichedUsers = searchUsers.map(u => ({
+        ...u,
+        posts_count: counts[u.id] || 0
+    }));
+
+    res.json({ users: enrichedUsers });
 });
 
 // GET /api/users/:username - Get user profile

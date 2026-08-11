@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OnlineProvider } from './context/OnlineContext';
 import BottomNavbar from './components/BottomNavbar';
+import TopNavbar from './components/TopNavbar';
 import UploadPost from './components/UploadPost';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Feed from './pages/Feed';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Search from './pages/Search';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Messages from './pages/Messages';
@@ -53,14 +55,27 @@ const AppContent = () => {
   const { user } = useAuth();
   const [showUpload, setShowUpload] = useState(false);
   const [newPost, setNewPost] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
 
   const handlePostCreated = (post) => {
     setNewPost(post);
     setTimeout(() => setNewPost(null), 1000);
   };
 
+  const showTopNav = user && (
+    location.pathname === '/' ||
+    location.pathname.startsWith('/messages') ||
+    location.pathname.startsWith('/profile')
+  );
+
   return (
     <>
+      {showTopNav && <TopNavbar />}
       {user && <BottomNavbar onUploadClick={() => setShowUpload(true)} />}
 
       {showUpload && (
@@ -117,6 +132,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <Search />
             </ProtectedRoute>
           }
         />

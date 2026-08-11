@@ -184,6 +184,33 @@ body {
               inset -2px -2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* ── TOP NAVBAR ── */
+.top-navbar {
+  position: fixed;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: var(--border-thick) !important;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(166, 180, 200, 0.08) !important;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .top-navbar {
+  background: rgba(30, 41, 59, 0.85) !important;
+  box-shadow: 0 4px 20px rgba(5, 8, 16, 0.3) !important;
+}
+
+.page-container.with-top-navbar {
+  padding-top: 96px !important;
+}
+
 /* ── BUTTONS ── */
 .btn-brand,
 .btn-ghost,

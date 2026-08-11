@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Trash2, Send, MoreHorizontal, Edit2, X, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, Send, MoreHorizontal, Edit2, X, Users, ChevronLeft, ChevronRight, BadgeCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot } from '../context/OnlineContext';
@@ -26,6 +26,25 @@ const renderTextWithLinks = (text) => {
         }
         return part;
     });
+};
+
+const renderVerificationBadge = (postCount) => {
+    if (postCount === undefined || postCount === null) return null;
+    if (postCount >= 50) {
+        return (
+            <span title="Premium Gold Creator (50+ Posts)" style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: '4px' }}>
+                <BadgeCheck size={16} color="#ffffff" fill="#eab308" style={{ filter: 'drop-shadow(0 1px 2px rgba(234,179,8,0.2))' }} />
+            </span>
+        );
+    }
+    if (postCount >= 15) {
+        return (
+            <span title="Verified Blue Creator (15+ Posts)" style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: '4px' }}>
+                <BadgeCheck size={16} color="#ffffff" fill="#3b82f6" style={{ filter: 'drop-shadow(0 1px 2px rgba(59,130,246,0.2))' }} />
+            </span>
+        );
+    }
+    return null;
 };
 
 const PDFSlideViewer = ({ url, onDoubleClick, onClick, height = '520px' }) => {
@@ -407,8 +426,9 @@ const PostCard = ({ post, onDelete }) => {
                         <OnlineDot userId={postUser.id} size={10} />
                     </div>
                     <div>
-                        <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '15px', color: 'var(--black)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <p style={{ display: 'flex', alignItems: 'center', gap: '2px', fontFamily: "'Outfit', sans-serif", fontWeight: '700', fontSize: '15px', color: 'var(--black)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             {postUser.username}
+                            {renderVerificationBadge(postUser.posts_count)}
                         </p>
                         <p style={{ fontSize: '9px', letterSpacing: '1.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
                             COLLEGE MEMBER
@@ -678,7 +698,7 @@ const PostCard = ({ post, onDelete }) => {
                                     overflow: expandedCaption ? 'visible' : 'hidden',
                                     textOverflow: 'ellipsis',
                                     verticalAlign: 'top',
-                                    whiteSpace: expandedCaption ? 'normal' : 'pre-wrap',
+                                    whiteSpace: 'pre-wrap',
                                 }}
                             >
                                 {renderTextWithLinks(captionText)}
