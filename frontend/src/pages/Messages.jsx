@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Send, ArrowLeft, MessageSquare, Search, X, User, ChevronRight, Info, Pencil, Trash2, Check, BadgeCheck } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Search, X, User, ChevronRight, Info, Pencil, Trash2, Check, BadgeCheck, Paperclip, Eye, Download, FileText, Play, File, Loader2 } from 'lucide-react';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { OnlineDot, useOnline } from '../context/OnlineContext';
@@ -163,7 +163,7 @@ const ProfilePanel = ({ partner, partnerId, onClose, isMobile }) => {
 };
 
 // ── Message bubble with edit/delete ──────────────────────────────────
-const MessageBubble = ({ msg, isMe, showAv, partner, isMobile, onEdit, onDelete }) => {
+const MessageBubble = ({ msg, isMe, showAv, partner, isMobile, onEdit, onDelete, onViewPhoto, onViewDoc }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [editing, setEditing] = useState(false);
     const [editText, setEditText] = useState(msg.content);
@@ -271,10 +271,208 @@ const MessageBubble = ({ msg, isMe, showAv, partner, isMobile, onEdit, onDelete 
                         </div>
                     ) : (
                         <>
-                            <p style={{
-                                fontSize: isMobile ? '13.5px' : '13px', lineHeight: '1.45',
-                                wordBreak: 'break-word', fontFamily: "'Inter', sans-serif",
-                            }}>{msg.content}</p>
+                            {/* Render image attachment if exists */}
+                            {msg.attachment_url && msg.attachment_type === 'image' && (
+                                <div 
+                                    onClick={() => onViewPhoto(msg.attachment_url)}
+                                    style={{
+                                        position: 'relative',
+                                        borderRadius: '12px',
+                                        overflow: 'hidden',
+                                        cursor: 'pointer',
+                                        marginBottom: msg.content ? '8px' : '0',
+                                        maxHeight: '220px',
+                                        maxWidth: '300px',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        background: 'rgba(0,0,0,0.05)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <img 
+                                        src={msg.attachment_url} 
+                                        alt={msg.attachment_name || "Attachment"} 
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            maxHeight: '220px',
+                                            objectFit: 'cover',
+                                            display: 'block',
+                                            transition: 'transform 0.3s ease'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                    />
+                                    <div style={{
+                                        position: 'absolute', inset: 0, 
+                                        background: 'rgba(0,0,0,0.25)', opacity: 0,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        transition: 'opacity 0.2s ease', color: '#fff', fontSize: '11px',
+                                        fontFamily: "'Inter', sans-serif"
+                                    }}
+                                        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                                        onMouseLeave={e => e.currentTarget.style.opacity = 0}
+                                    >
+                                        <Eye size={14} style={{ marginRight: '4px' }} /> View Photo
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Render video attachment if exists */}
+                            {msg.attachment_url && msg.attachment_type === 'video' && (
+                                <div style={{
+                                    position: 'relative',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    marginBottom: msg.content ? '8px' : '0',
+                                    maxHeight: '220px',
+                                    maxWidth: '300px',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    background: '#000000',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <video 
+                                        src={msg.attachment_url} 
+                                        controls 
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            maxHeight: '220px',
+                                            display: 'block'
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Render document attachment if exists */}
+                            {msg.attachment_url && ['pdf', 'docx', 'pptx', 'xlsx', 'raw'].includes(msg.attachment_type) && (
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    background: isMe ? 'rgba(255, 255, 255, 0.12)' : 'rgba(30, 41, 59, 0.05)',
+                                    border: isMe ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid rgba(30, 41, 59, 0.08)',
+                                    marginBottom: msg.content ? '8px' : '0',
+                                    minWidth: '200px',
+                                    maxWidth: '260px',
+                                    wordBreak: 'break-all'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{
+                                            padding: '6px',
+                                            borderRadius: '6px',
+                                            background: msg.attachment_type === 'pdf' ? 'rgba(239, 68, 68, 0.15)' : 
+                                                        msg.attachment_type === 'docx' ? 'rgba(59, 130, 246, 0.15)' : 
+                                                        msg.attachment_type === 'pptx' ? 'rgba(249, 115, 22, 0.15)' : 
+                                                        msg.attachment_type === 'xlsx' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(100, 116, 139, 0.15)',
+                                            color: msg.attachment_type === 'pdf' ? '#ef4444' : 
+                                                   msg.attachment_type === 'docx' ? '#3b82f6' : 
+                                                   msg.attachment_type === 'pptx' ? '#f97316' : 
+                                                   msg.attachment_type === 'xlsx' ? '#22c55e' : 'var(--text-muted)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            <FileText size={18} />
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <p style={{
+                                                fontSize: '11px',
+                                                fontWeight: '600',
+                                                color: isMe ? '#ffffff' : 'var(--black)',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            }} title={msg.attachment_name}>
+                                                {msg.attachment_name || 'Document'}
+                                            </p>
+                                            <p style={{
+                                                fontSize: '8px',
+                                                color: isMe ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.5px',
+                                                marginTop: '1px',
+                                                fontWeight: '700'
+                                            }}>
+                                                {msg.attachment_type === 'raw' ? 'file' : msg.attachment_type}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '6px',
+                                        marginTop: '2px',
+                                        borderTop: isMe ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.06)',
+                                        paddingTop: '6px'
+                                    }}>
+                                        {!isOpt && ['pdf', 'docx', 'pptx', 'xlsx'].includes(msg.attachment_type) && (
+                                            <button 
+                                                onClick={() => onViewDoc({ url: msg.attachment_url, type: msg.attachment_type, name: msg.attachment_name })}
+                                                style={{
+                                                    flex: 1,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '2px',
+                                                    padding: '5px 8px',
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    background: isMe ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.04)',
+                                                    color: isMe ? '#ffffff' : 'var(--black)',
+                                                    fontSize: '10px',
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    transition: 'background 0.2s'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = isMe ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.08)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = isMe ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.04)'}
+                                            >
+                                                <Eye size={10} /> View
+                                            </button>
+                                        )}
+                                        <a 
+                                            href={msg.attachment_url} 
+                                            download={msg.attachment_name || 'download'} 
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '2px',
+                                                padding: '5px 8px',
+                                                borderRadius: '6px',
+                                                background: isMe ? '#ffffff' : 'var(--black)',
+                                                color: isMe ? 'var(--yellow)' : '#ffffff',
+                                                fontSize: '10px',
+                                                fontWeight: '600',
+                                                textDecoration: 'none',
+                                                textAlign: 'center',
+                                                transition: 'transform 0.15s'
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                        >
+                                            <Download size={10} /> Get
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+
+                            {msg.content && (
+                                <p style={{
+                                    fontSize: isMobile ? '13.5px' : '13px', lineHeight: '1.45',
+                                    wordBreak: 'break-word', fontFamily: "'Inter', sans-serif",
+                                }}>{msg.content}</p>
+                            )}
+                            
                             <p className="bubble-time">
                                 {isOpt ? '...' : fmtTime(msg.created_at)}
                                 {isMe && !isOpt && (
@@ -311,10 +509,71 @@ const Messages = () => {
     const [showSearch, setShowSearch] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
 
+    // Staged attachments & Viewer Modals state
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [filePreview, setFilePreview] = useState(null);
+    const [activePhoto, setActivePhoto] = useState(null);
+    const [activeDoc, setActiveDoc] = useState(null);
+
     const messagesEndRef = useRef(null);
     const textareaRef = useRef(null);
+    const fileInputRef = useRef(null);
     const pollRef = useRef(null);
     const searchDebRef = useRef(null);
+
+    // Clean up staged preview URL on change/unmount to avoid memory leaks
+    useEffect(() => {
+        return () => {
+            if (filePreview && filePreview.url) {
+                URL.revokeObjectURL(filePreview.url);
+            }
+        };
+    }, [filePreview]);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (filePreview && filePreview.url) {
+            URL.revokeObjectURL(filePreview.url);
+        }
+
+        let fileType = 'raw';
+        const fileMime = file.type || '';
+
+        if (fileMime.startsWith('image/')) {
+            fileType = 'image';
+        } else if (fileMime.startsWith('video/')) {
+            fileType = 'video';
+        } else if (fileMime === 'application/pdf') {
+            fileType = 'pdf';
+        } else if (fileMime.includes('word') || fileMime.includes('msword')) {
+            fileType = 'docx';
+        } else if (fileMime.includes('presentation') || fileMime.includes('powerpoint')) {
+            fileType = 'pptx';
+        } else if (fileMime.includes('spreadsheet') || fileMime.includes('excel')) {
+            fileType = 'xlsx';
+        }
+
+        setSelectedFile(file);
+        setFilePreview({
+            url: URL.createObjectURL(file),
+            type: fileType,
+            name: file.name,
+            size: file.size
+        });
+    };
+
+    const removeSelectedFile = () => {
+        if (filePreview && filePreview.url) {
+            URL.revokeObjectURL(filePreview.url);
+        }
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     const showSidebar = !isMobile || !partnerId;
     const showChat = !isMobile || !!partnerId;
@@ -390,19 +649,89 @@ const Messages = () => {
 
     // ── Send ──
     const sendMessage = async () => {
-        if (!text.trim() || sending) return;
+        if ((!text.trim() && !selectedFile) || sending) return;
         const content = text.trim();
+        const file = selectedFile;
+        const preview = filePreview;
+        
         setText('');
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
         setSending(true);
-        const opt = { id: `opt-${Date.now()}`, sender_id: user.id, receiver_id: partnerId, content, created_at: new Date().toISOString(), read_at: null };
+
+        const opt = { 
+            id: `opt-${Date.now()}`, 
+            sender_id: user.id, 
+            receiver_id: partnerId, 
+            content, 
+            created_at: new Date().toISOString(), 
+            read_at: null,
+            attachment_url: preview ? preview.url : null,
+            attachment_type: preview ? preview.type : null,
+            attachment_name: preview ? preview.name : null
+        };
+        
         setMessages(p => [...p, opt]);
+        
         try {
-            const { data } = await api.post(`/messages/${partnerId}`, { content });
+            let res;
+            if (file) {
+                // Determine resource type for Cloudinary direct upload
+                let resourceType = 'raw';
+                if (preview.type === 'image') {
+                    resourceType = 'image';
+                } else if (preview.type === 'video') {
+                    resourceType = 'video';
+                }
+
+                // 1. Get Cloudinary signature from backend
+                const { data: signData } = await api.get('/messages/cloudinary-signature');
+                const { signature, timestamp, apiKey, cloudName } = signData;
+
+                // 2. Upload file directly to Cloudinary
+                const cloudFormData = new FormData();
+                cloudFormData.append('file', file);
+                cloudFormData.append('api_key', apiKey);
+                cloudFormData.append('timestamp', timestamp);
+                cloudFormData.append('signature', signature);
+                cloudFormData.append('folder', 'messages');
+
+                const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
+                    method: 'POST', 
+                    body: cloudFormData
+                });
+                
+                if (!cloudRes.ok) {
+                    throw new Error('Cloudinary upload failed');
+                }
+                
+                const cloudJson = await cloudRes.json();
+                const uploadedUrl = cloudJson.secure_url;
+
+                // 3. Post reference metadata to messaging backend
+                res = await api.post(`/messages/${partnerId}`, {
+                    content,
+                    attachmentUrl: uploadedUrl,
+                    attachmentType: preview.type,
+                    attachmentName: file.name
+                });
+            } else {
+                res = await api.post(`/messages/${partnerId}`, { content });
+            }
+            const { data } = res;
             setMessages(p => p.map(m => m.id === opt.id ? data.message : m));
             loadConversations();
-        } catch {
+        } catch (err) {
+            console.error('Send message error:', err);
             setMessages(p => p.filter(m => m.id !== opt.id));
             setText(content);
+            if (file && preview) {
+                setSelectedFile(file);
+                setFilePreview(preview);
+            }
             toast.error('Failed to send');
         }
         setSending(false);
@@ -879,6 +1208,26 @@ const Messages = () => {
                     transform: translateY(-1px);
                     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
                 }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.95); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(8px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .spinner {
+                    animation: spin 1s linear infinite;
+                }
             `}</style>
 
             {/* ══ SIDEBAR ══ */}
@@ -1082,6 +1431,8 @@ const Messages = () => {
                                                     isMobile={isMobile}
                                                     onEdit={handleEdit}
                                                     onDelete={handleDelete}
+                                                    onViewPhoto={setActivePhoto}
+                                                    onViewDoc={setActiveDoc}
                                                 />
                                             ))}
                                         </React.Fragment>
@@ -1100,29 +1451,140 @@ const Messages = () => {
                                     paddingLeft: 'env(safe-area-inset-left, 16px)',
                                     paddingRight: 'env(safe-area-inset-right, 16px)',
                                     borderTop: '1px solid var(--border-color)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'stretch',
+                                    background: 'var(--white)'
                                 } : {
                                     paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'stretch',
+                                    background: 'var(--white)'
                                 }}>
-                                    <div className="chat-input-wrapper">
-                                        <textarea
-                                            ref={textareaRef}
-                                            value={text}
-                                            onChange={e => setText(e.target.value)}
-                                            onKeyDown={handleKeyDown}
-                                            placeholder="Type a message..."
-                                            rows={1}
-                                            maxLength={2000}
-                                            className="chat-input-field"
+                                    {/* Selected File Preview Box */}
+                                    {filePreview && (
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            background: 'var(--primary-tint)',
+                                            border: '1px solid var(--border-color)',
+                                            borderRadius: '14px',
+                                            padding: '8px 12px',
+                                            marginBottom: '8px',
+                                            animation: 'slideUp 0.15s ease-out',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
+                                        }}>
+                                            {filePreview.type === 'image' ? (
+                                                <img 
+                                                    src={filePreview.url} 
+                                                    alt="Preview" 
+                                                    style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'cover' }} 
+                                                />
+                                            ) : filePreview.type === 'video' ? (
+                                                <div style={{
+                                                    width: '38px', height: '38px', borderRadius: '8px', 
+                                                    background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                                                }}>
+                                                    <Play size={16} />
+                                                </div>
+                                            ) : (
+                                                <div style={{
+                                                    width: '38px', height: '38px', borderRadius: '8px', 
+                                                    background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    color: 'var(--yellow)'
+                                                }}>
+                                                    <FileText size={18} />
+                                                </div>
+                                            )}
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <p style={{ fontSize: '12px', fontWeight: '600', color: 'var(--black)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {filePreview.name}
+                                                </p>
+                                                <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                                    {(filePreview.size / 1024 / 1024).toFixed(2)} MB • Staged
+                                                </p>
+                                            </div>
+                                            <button 
+                                                onClick={removeSelectedFile}
+                                                style={{
+                                                    background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer',
+                                                    padding: '4px', display: 'flex', alignItems: 'center'
+                                                }}
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', width: '100%' }}>
+                                        {/* Attachment Button */}
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={sending}
+                                            style={{
+                                                background: filePreview ? 'var(--yellow)' : 'var(--primary-tint)',
+                                                border: 'none',
+                                                color: filePreview ? '#ffffff' : 'var(--yellow)',
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '50%',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s ease',
+                                                flexShrink: 0
+                                            }}
+                                            onMouseEnter={e => {
+                                                if (!filePreview) e.currentTarget.style.background = 'var(--yellow)';
+                                                if (!filePreview) e.currentTarget.style.color = '#ffffff';
+                                            }}
+                                            onMouseLeave={e => {
+                                                if (!filePreview) e.currentTarget.style.background = 'var(--primary-tint)';
+                                                if (!filePreview) e.currentTarget.style.color = 'var(--yellow)';
+                                            }}
+                                            title="Attach Photo, Video or Document"
+                                        >
+                                            <Paperclip size={18} />
+                                        </button>
+                                        
+                                        <input 
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            style={{ display: 'none' }}
+                                            accept="image/*,video/*,application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
                                         />
+
+                                        <div className="chat-input-wrapper">
+                                            <textarea
+                                                ref={textareaRef}
+                                                value={text}
+                                                onChange={e => setText(e.target.value)}
+                                                onKeyDown={handleKeyDown}
+                                                placeholder="Type a message..."
+                                                rows={1}
+                                                maxLength={2000}
+                                                className="chat-input-field"
+                                                disabled={sending}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={sendMessage}
+                                            disabled={(!text.trim() && !selectedFile) || sending}
+                                            className={`chat-send-btn ${(text.trim() || selectedFile) && !sending ? 'active' : ''}`}
+                                            title="Send Message"
+                                        >
+                                            {sending ? (
+                                                <Loader2 size={18} className="spinner" style={{ animation: 'spin 1s linear infinite' }} />
+                                            ) : (
+                                                <Send size={18} />
+                                            )}
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={sendMessage}
-                                        disabled={!text.trim() || sending}
-                                        className={`chat-send-btn ${text.trim() ? 'active' : ''}`}
-                                        title="Send Message"
-                                    >
-                                        <Send size={18} />
-                                    </button>
                                 </div>
                             </div>
 
@@ -1134,6 +1596,182 @@ const Messages = () => {
                             {/* Profile panel — mobile bottom sheet */}
                             {showProfile && isMobile && (
                                 <ProfilePanel partner={partner} partnerId={partnerId} onClose={() => setShowProfile(false)} isMobile={true} />
+                            )}
+
+                            {/* Photo Viewer Modal */}
+                            {activePhoto && (
+                                <div 
+                                    onClick={() => setActivePhoto(null)}
+                                    style={{
+                                        position: 'fixed',
+                                        inset: 0,
+                                        zIndex: 999,
+                                        background: 'rgba(15, 23, 42, 0.95)',
+                                        backdropFilter: 'blur(10px)',
+                                        WebkitBackdropFilter: 'blur(10px)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '24px',
+                                        animation: 'fadeIn 0.25s ease-out'
+                                    }}
+                                >
+                                    <button 
+                                        onClick={() => setActivePhoto(null)}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '20px',
+                                            right: '20px',
+                                            background: 'rgba(255,255,255,0.1)',
+                                            border: '1px solid rgba(255,255,255,0.2)',
+                                            color: '#ffffff',
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            zIndex: 1000,
+                                            transition: 'background 0.2s'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                    <img 
+                                        src={activePhoto} 
+                                        alt="Preview" 
+                                        onClick={e => e.stopPropagation()}
+                                        style={{
+                                            maxWidth: '100%',
+                                            maxHeight: '90dvh',
+                                            objectFit: 'contain',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                                            transform: 'scale(1)',
+                                            animation: 'scaleIn 0.25s ease-out'
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Document Viewer Modal */}
+                            {activeDoc && (
+                                <div 
+                                    style={{
+                                        position: 'fixed',
+                                        inset: 0,
+                                        zIndex: 999,
+                                        background: 'rgba(15, 23, 42, 0.75)',
+                                        backdropFilter: 'blur(8px)',
+                                        WebkitBackdropFilter: 'blur(8px)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: isMobile ? '12px' : '24px',
+                                        animation: 'fadeIn 0.2s ease-out'
+                                    }}
+                                    onClick={() => setActiveDoc(null)}
+                                >
+                                    <div 
+                                        onClick={e => e.stopPropagation()}
+                                        style={{
+                                            background: 'var(--white)',
+                                            width: '100%',
+                                            maxWidth: '900px',
+                                            height: '85dvh',
+                                            borderRadius: '24px',
+                                            border: '1px solid var(--border-color)',
+                                            boxShadow: 'var(--shadow-lg)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            overflow: 'hidden',
+                                            animation: 'scaleIn 0.2s ease-out'
+                                        }}
+                                    >
+                                        {/* Header */}
+                                        <div style={{
+                                            padding: '16px 20px',
+                                            borderBottom: '1px solid var(--border-color)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            background: 'var(--white)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                                <FileText size={18} color="var(--yellow)" style={{ flexShrink: 0 }} />
+                                                <span style={{
+                                                    fontFamily: "'Outfit', sans-serif",
+                                                    fontWeight: '700',
+                                                    fontSize: '13px',
+                                                    letterSpacing: '1px',
+                                                    color: 'var(--black)',
+                                                    textTransform: 'uppercase',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    {activeDoc.name || 'Document Viewer'}
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <a 
+                                                    href={activeDoc.url} 
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    title="Download document"
+                                                    style={{
+                                                        background: 'var(--primary-tint)',
+                                                        color: 'var(--yellow)',
+                                                        border: 'none',
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        textDecoration: 'none'
+                                                    }}
+                                                >
+                                                    <Download size={14} />
+                                                </a>
+                                                <button 
+                                                    onClick={() => setActiveDoc(null)}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: '1px solid var(--border-color)',
+                                                        color: 'var(--black)',
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <X size={15} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Google Docs Viewer iframe */}
+                                        <div style={{ flex: 1, background: '#f8fafc', position: 'relative' }}>
+                                            <iframe 
+                                                src={`https://docs.google.com/gview?url=${encodeURIComponent(activeDoc.url)}&embedded=true`} 
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    border: 'none'
+                                                }}
+                                                title="Google Document Viewer"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </>
                     )}

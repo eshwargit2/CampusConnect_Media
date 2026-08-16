@@ -1,8 +1,13 @@
 const express = require('express');
 const supabase = require('../supabase');
 const authMiddleware = require('../middleware/authMiddleware');
+const multer = require('multer');
 
 const router = express.Router();
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 200 * 1024 * 1024 }, // 200MB limit
+});
 
 // ─── GET /api/messages — Get all conversations for current user ──────
 router.get('/', authMiddleware, async (req, res) => {
@@ -12,7 +17,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const { data: msgs, error } = await supabase
         .from('messages')
         .select(`
-            id, sender_id, receiver_id, content, read_at, created_at
+            id, sender_id, receiver_id, content, read_at, created_at, attachment_url, attachment_type, attachment_name
         `)
         .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
         .order('created_at', { ascending: false });
@@ -88,6 +93,18 @@ router.get('/unread-count', authMiddleware, async (req, res) => {
     res.json({ count: count || 0 });
 });
 
+// GET /api/messages/cloudinary-signature - Get signature for direct frontend upload
+router.get('/cloudinary-signature', authMiddleware, (req, res) => {
+    try {
+        const { generateSignature } = require('../cloudinary');
+        const signData = generateSignature('messages');
+        res.json(signData);
+    } catch (err) {
+        console.error('Signature error:', err);
+        res.status(500).json({ error: 'Failed to generate signature' });
+    }
+});
+
 // ─── GET /api/messages/:partnerId — Get message thread ───────────────
 router.get('/:partnerId', authMiddleware, async (req, res) => {
     const userId = req.user.id;
@@ -95,7 +112,7 @@ router.get('/:partnerId', authMiddleware, async (req, res) => {
 
     const { data: messages, error } = await supabase
         .from('messages')
-        .select('id, sender_id, receiver_id, content, read_at, created_at')
+        .select('id, sender_id, receiver_id, content, read_at, created_at, attachment_url, attachment_type, attachment_name')
         .or(
             `and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`
         )
@@ -138,13 +155,13 @@ router.get('/:partnerId', authMiddleware, async (req, res) => {
 });
 
 // ─── POST /api/messages/:partnerId — Send a message ──────────────────
-router.post('/:partnerId', authMiddleware, async (req, res) => {
+router.post('/:partnerId', authMiddleware, upload.single('file'), async (req, res) => {
     const userId = req.user.id;
     const { partnerId } = req.params;
-    const { content } = req.body;
+    const { content, attachmentUrl: bodyUrl, attachmentType: bodyType, attachmentName: bodyName } = req.body;
 
-    if (!content || !content.trim()) {
-        return res.status(400).json({ error: 'Message content is required' });
+    if ((!content || !content.trim()) && !req.file && !bodyUrl) {
+        return res.status(400).json({ error: 'Message content or attachment is required' });
     }
 
     if (userId === partnerId) {
@@ -156,11 +173,62 @@ router.post('/:partnerId', authMiddleware, async (req, res) => {
     if (partnerUser?.is_private) {
         const { data: follow } = await supabase.from('follows').select('id')
             .eq('follower_id', userId).eq('following_id', partnerId).eq('status', 'accepted').single();
-            
+
         // Also allow replying if they messaged you first, or they follow you? 
         // Let's just strictly enforce following if private for now.
         if (!follow) {
             return res.status(403).json({ error: 'You must follow this private account to message them' });
+        }
+    }
+
+    let attachmentUrl = bodyUrl || null;
+    let attachmentType = bodyType || null;
+    let attachmentName = bodyName || null;
+
+    if (req.file) {
+        try {
+            const { uploadToCloudinary } = require('../cloudinary');
+            const fileMime = req.file.mimetype || '';
+            let resourceType = 'raw';
+            let type = 'raw';
+
+            if (fileMime.startsWith('image/')) {
+                resourceType = 'image';
+                type = 'image';
+            } else if (fileMime.startsWith('video/')) {
+                resourceType = 'video';
+                type = 'video';
+            } else if (fileMime === 'application/pdf') {
+                resourceType = 'raw';
+                type = 'pdf';
+            } else if (
+                fileMime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                fileMime === 'application/msword'
+            ) {
+                resourceType = 'raw';
+                type = 'docx';
+            } else if (
+                fileMime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || 
+                fileMime === 'application/vnd.ms-powerpoint'
+            ) {
+                resourceType = 'raw';
+                type = 'pptx';
+            } else if (
+                fileMime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                fileMime === 'application/vnd.ms-excel'
+            ) {
+                resourceType = 'raw';
+                type = 'xlsx';
+            }
+
+            const folderName = 'messages';
+            const result = await uploadToCloudinary(req.file.buffer, resourceType, folderName);
+            attachmentUrl = result.secure_url;
+            attachmentType = type;
+            attachmentName = req.file.originalname;
+        } catch (uploadError) {
+            console.error('File upload error in messages:', uploadError);
+            return res.status(500).json({ error: 'Failed to upload attachment' });
         }
     }
 
@@ -169,9 +237,12 @@ router.post('/:partnerId', authMiddleware, async (req, res) => {
         .insert({
             sender_id: userId,
             receiver_id: partnerId,
-            content: content.trim(),
+            content: (content || '').trim(),
+            attachment_url: attachmentUrl,
+            attachment_type: attachmentType,
+            attachment_name: attachmentName
         })
-        .select('id, sender_id, receiver_id, content, read_at, created_at')
+        .select('id, sender_id, receiver_id, content, read_at, created_at, attachment_url, attachment_type, attachment_name')
         .single();
 
     if (error) {
@@ -205,7 +276,7 @@ router.patch('/:messageId', authMiddleware, async (req, res) => {
         .from('messages')
         .update({ content: content.trim() })
         .eq('id', messageId)
-        .select('id, sender_id, receiver_id, content, read_at, created_at')
+        .select('id, sender_id, receiver_id, content, read_at, created_at, attachment_url, attachment_type, attachment_name')
         .single();
 
     if (error) return res.status(500).json({ error: 'Failed to edit message' });

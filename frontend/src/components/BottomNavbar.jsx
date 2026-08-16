@@ -133,8 +133,8 @@ const BottomNavbar = ({ onUploadClick }) => {
                 margin: '0 8px',
                 transition: 'all 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
                 <PlusCircle size={24} />
             </button>
