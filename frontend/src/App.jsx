@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword';
 import Messages from './pages/Messages';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import Landing from './pages/Landing';
 
 // Route guard for authenticated routes
 const ProtectedRoute = ({ children }) => {
@@ -49,6 +50,32 @@ const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   return user ? <Navigate to="/" replace /> : children;
+};
+
+// Home route: shows feed if logged in, otherwise shows unique landing page
+const HomeRoute = ({ newPost }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-base)',
+        }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ margin: '0 auto 16px' }} />
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return user ? <Feed newPost={newPost} /> : <Landing />;
 };
 
 const AppContent = () => {
@@ -114,9 +141,7 @@ const AppContent = () => {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <Feed newPost={newPost} />
-            </ProtectedRoute>
+            <HomeRoute newPost={newPost} />
           }
         />
         <Route
