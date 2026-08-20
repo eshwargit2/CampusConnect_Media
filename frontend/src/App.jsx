@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OnlineProvider } from './context/OnlineContext';
@@ -83,6 +83,23 @@ const AppContent = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [newPost, setNewPost] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Redirect if it's a password recovery flow landing anywhere in the app (excluding /reset-password to prevent loop)
+  useEffect(() => {
+    const hash = window.location.hash.substring(1);
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    const hashParams = new URLSearchParams(hash);
+    const type = hashParams.get('type') || searchParams.get('type');
+    const hasAccessToken = hashParams.get('access_token');
+    const hasCode = searchParams.get('code');
+    const hasError = hashParams.get('error') || searchParams.get('error') || hashParams.get('error_code') || searchParams.get('error_code');
+
+    if (location.pathname !== '/reset-password' && (type === 'recovery' || hasAccessToken || hasError || (hasCode && window.location.href.includes('recovery')))) {
+      navigate(`/reset-password${window.location.search}${window.location.hash}`, { replace: true });
+    }
+  }, [navigate, location]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
