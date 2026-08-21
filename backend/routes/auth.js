@@ -70,59 +70,91 @@ async function sendEmail({ to, subject, html }) {
 
 function resetOtpEmailHtml(username, otp) {
     return `
-    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0a0a0a;">
-      <div style="background:#FFE000;padding:24px 32px;border-bottom:5px solid #0a0a0a;">
-        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0a0a0a;text-transform:uppercase;letter-spacing:2px;">
-          🎓 CAMPUS<span style="color:#333;">CONNECT</span>
-        </h1>
-      </div>
-      <div style="padding:32px;color:#f5f0e8;">
-        <h2 style="font-size:18px;margin:0 0 16px;color:#FFE000;text-transform:uppercase;">Password Reset</h2>
-        <p style="font-size:14px;line-height:1.7;margin:0 0 8px;color:#ccc;">
-          Hi <strong style="color:#FFE000;">${username}</strong>,
-        </p>
-        <p style="font-size:14px;line-height:1.7;margin:0 0 24px;color:#ccc;">
-          We received a request to reset your password. Please use the following One-Time Password (OTP) to verify your identity and reset your password:
-        </p>
-        <div style="background:#1a1a1a;padding:20px;text-align:center;border:2px dashed #FFE000;margin-bottom:24px;">
-          <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#FFE000;font-family:'Courier New',monospace;">${otp}</span>
+    <div style="font-family:'Outfit', 'Inter', Arial, sans-serif; background-color: #f1f5f9; padding: 40px 20px; text-align: center;">
+      <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 10px 30px rgba(166, 180, 200, 0.15); overflow: hidden; text-align: left;">
+        
+        <!-- Header -->
+        <div style="background: rgba(59, 130, 246, 0.08); padding: 24px 32px; border-bottom: 1px solid rgba(15, 23, 42, 0.06); text-align: center;">
+          <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px;">
+            🎓 CAMPUS<span style="color: #1e293b;">CONNECT</span>
+          </h1>
         </div>
-        <p style="font-size:12px;line-height:1.7;margin:24px 0 0;color:#888;">
-          This OTP is valid for <strong>10 minutes</strong>. If you didn't request this, ignore this email.
-        </p>
-      </div>
-      <div style="background:#FFE000;padding:12px 32px;text-align:center;">
-        <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:3px;color:#0a0a0a;text-transform:uppercase;">
-          CAMPUSCONNECT — SECURE RESET
-        </p>
+
+        <!-- Body -->
+        <div style="padding: 32px; color: #1e293b;">
+          <div style="border-left: 3px solid #3b82f6; padding-left: 10px; margin-bottom: 20px;">
+            <span style="font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">Account Security</span>
+            <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #3b82f6; text-transform: uppercase;">Password Reset</h2>
+          </div>
+
+          <p style="font-size: 14px; line-height: 1.7; margin: 0 0 12px; color: #64748b;">
+            Hi <strong style="color: #3b82f6;">${username}</strong>,
+          </p>
+          <p style="font-size: 14px; line-height: 1.7; margin: 0 0 24px; color: #64748b;">
+            We received a request to reset your password. Please use the following One-Time Password (OTP) to verify your identity and set a new password:
+          </p>
+
+          <!-- OTP Code Display -->
+          <div style="background: rgba(59, 130, 246, 0.04); border: 2px dashed #3b82f6; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #3b82f6; font-family: 'Courier New', Courier, monospace;">${otp}</span>
+          </div>
+
+          <p style="font-size: 12px; line-height: 1.7; margin: 0; color: #94a3b8; text-align: center;">
+            This OTP is valid for <strong>10 minutes</strong>. If you did not request this verification, you can safely ignore this email.
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: rgba(59, 130, 246, 0.04); padding: 16px 32px; border-top: 1px solid rgba(15, 23, 42, 0.06); text-align: center;">
+          <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #64748b; text-transform: uppercase;">
+            CAMPUSCONNECT — SECURE RESET 🔐
+          </p>
+        </div>
+
       </div>
     </div>`;
 }
 
 function otpEmailHtml(otp) {
     return `
-    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0a0a0a;">
-      <div style="background:#FFE000;padding:24px 32px;border-bottom:5px solid #0a0a0a;">
-        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0a0a0a;text-transform:uppercase;letter-spacing:2px;">
-          🎓 CAMPUS<span style="color:#333;">CONNECT</span>
-        </h1>
-      </div>
-      <div style="padding:32px;color:#f5f0e8;">
-        <h2 style="font-size:18px;margin:0 0 16px;color:#FFE000;text-transform:uppercase;">Email Verification</h2>
-        <p style="font-size:14px;line-height:1.7;margin:0 0 24px;color:#ccc;">
-          Thank you for signing up for CampusConnect! Please use the following One-Time Password (OTP) to verify your email and complete your registration:
-        </p>
-        <div style="background:#1a1a1a;padding:20px;text-align:center;border:2px dashed #FFE000;margin-bottom:24px;">
-          <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#FFE000;font-family:'Courier New',monospace;">${otp}</span>
+    <div style="font-family:'Outfit', 'Inter', Arial, sans-serif; background-color: #f1f5f9; padding: 40px 20px; text-align: center;">
+      <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 10px 30px rgba(166, 180, 200, 0.15); overflow: hidden; text-align: left;">
+        
+        <!-- Header -->
+        <div style="background: rgba(59, 130, 246, 0.08); padding: 24px 32px; border-bottom: 1px solid rgba(15, 23, 42, 0.06); text-align: center;">
+          <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px;">
+            🎓 CAMPUS<span style="color: #1e293b;">CONNECT</span>
+          </h1>
         </div>
-        <p style="font-size:12px;line-height:1.7;margin:24px 0 0;color:#888;">
-          This OTP is valid for <strong>10 minutes</strong>. If you did not request this verification, please ignore this email.
-        </p>
-      </div>
-      <div style="background:#FFE000;padding:12px 32px;text-align:center;">
-        <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:3px;color:#0a0a0a;text-transform:uppercase;">
-          CAMPUSCONNECT — VERIFICATION
-        </p>
+
+        <!-- Body -->
+        <div style="padding: 32px; color: #1e293b;">
+          <div style="border-left: 3px solid #3b82f6; padding-left: 10px; margin-bottom: 20px;">
+            <span style="font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">Verification</span>
+            <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #3b82f6; text-transform: uppercase;">Email Verification</h2>
+          </div>
+
+          <p style="font-size: 14px; line-height: 1.7; margin: 0 0 24px; color: #64748b;">
+            Thank you for signing up for CampusConnect! Please use the following One-Time Password (OTP) to verify your email and complete your registration:
+          </p>
+
+          <!-- OTP Code Display -->
+          <div style="background: rgba(59, 130, 246, 0.04); border: 2px dashed #3b82f6; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #3b82f6; font-family: 'Courier New', Courier, monospace;">${otp}</span>
+          </div>
+
+          <p style="font-size: 12px; line-height: 1.7; margin: 0; color: #94a3b8; text-align: center;">
+            This OTP is valid for <strong>10 minutes</strong>. If you did not request this verification, you can safely ignore this email.
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: rgba(59, 130, 246, 0.04); padding: 16px 32px; border-top: 1px solid rgba(15, 23, 42, 0.06); text-align: center;">
+          <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #64748b; text-transform: uppercase;">
+            CAMPUSCONNECT — VERIFICATION 🎓
+          </p>
+        </div>
+
       </div>
     </div>`;
 }
@@ -376,12 +408,15 @@ router.post('/forgot-password', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    if (!normalizedEmail.endsWith(`@${ALLOWED_DOMAIN}`)) {
+        return res.status(400).json({ error: `Only @${ALLOWED_DOMAIN} email addresses are allowed` });
+    }
+
     const { data: ourUser } = await supabase
         .from('users').select('id, username').eq('email', normalizedEmail).single();
 
     if (!ourUser) {
-        // Return success response to prevent email enumeration
-        return res.json({ message: 'If that email is registered, a password reset OTP has been sent.' });
+        return res.status(404).json({ error: 'This email address is not registered' });
     }
 
     // Generate 6-digit numeric OTP
