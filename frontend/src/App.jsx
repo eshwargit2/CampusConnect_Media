@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Search from './pages/Search';
 import ForgotPassword from './pages/ForgotPassword';
+import VerifyResetOtp from './pages/VerifyResetOtp';
 import ResetPassword from './pages/ResetPassword';
 import Messages from './pages/Messages';
 import AdminLogin from './pages/AdminLogin';
@@ -154,7 +155,22 @@ const AppContent = () => {
             </PublicRoute>
           }
         />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/verify-reset-otp"
+          element={
+            <PublicRoute>
+              <VerifyResetOtp />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          }
+        />
         <Route
           path="/"
           element={

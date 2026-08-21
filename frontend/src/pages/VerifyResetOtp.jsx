@@ -1,28 +1,42 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Loader2, AlertCircle, GraduationCap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Lock, Loader2, AlertCircle, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useIsMobile from '../hooks/useIsMobile';
 import api from '../lib/api';
 
-const ForgotPassword = () => {
+const VerifyResetOtp = () => {
     const isMobile = useIsMobile();
     const navigate = useNavigate();
-    const [email, setEmail] = useState('');
+    const location = useLocation();
+    
+    const email = location.state?.email || '';
+    const [otp, setOtp] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    useEffect(() => {
+        // If email is missing, redirect back to forgot-password
+        if (!email) {
+            toast.error('Session expired. Please request a new OTP.');
+            navigate('/forgot-password', { replace: true });
+        }
+    }, [email, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!email.trim()) return;
+        if (!otp.trim() || otp.length !== 6) {
+            setError('ENTER A VALID 6-DIGIT OTP');
+            return;
+        }
         setLoading(true); setError('');
         try {
-            const { data } = await api.post('/auth/forgot-password', { email });
-            toast.success(data.message || 'OTP sent successfully!');
-            // Redirect to verify OTP page with email in state
-            navigate('/verify-reset-otp', { state: { email } });
+            const { data } = await api.post('/auth/verify-reset-otp', { email, otp });
+            toast.success(data.message || 'OTP verified successfully!');
+            // Redirect to reset password page with email and verified OTP in state
+            navigate('/reset-password', { state: { email, otp } });
         } catch (err) {
-            setError(err.response?.data?.error || 'SOMETHING WENT WRONG. TRY AGAIN.');
+            setError(err.response?.data?.error || 'VERIFICATION FAILED. TRY AGAIN.');
         } finally { setLoading(false); }
     };
 
@@ -48,14 +62,14 @@ const ForgotPassword = () => {
                                 <GraduationCap size={24} color="#ffffff" />
                             </div>
                             <div>
-                                <div style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px', fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>ACCOUNT RECOVERY</div>
+                                <div style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px', fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>VERIFY IDENTITY</div>
                                 <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '22px', fontWeight: '800', color: 'var(--yellow)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-                                    FORGOT<span style={{ color: 'var(--black)' }}> PASSWORD</span>
+                                    ENTER<span style={{ color: 'var(--black)' }}> OTP</span>
                                 </h1>
                             </div>
                         </div>
                         <p style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif", fontWeight: '600' }}>
-                            ENTER YOUR EMAIL TO RECEIVE A RESET OTP
+                            WE SENT A ONE-TIME PASSWORD TO YOUR REGISTERED EMAIL
                         </p>
                     </div>
 
@@ -69,28 +83,37 @@ const ForgotPassword = () => {
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div>
-                                <label className="field-label" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>Email Address</label>
+                                <label className="field-label" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: '700' }}>One-Time Password (OTP)</label>
                                 <div style={{ position: 'relative' }}>
-                                    <Mail size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
-                                    <input className="input-field" type="email"
-                                        value={email} onChange={e => { setEmail(e.target.value); setError(''); }}
-                                        placeholder="you@gmail.com" required autoFocus
-                                        style={{ paddingLeft: '38px', fontFamily: "'Inter', sans-serif" }} disabled={loading} />
+                                    <Lock size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                    <input className="input-field" type="text"
+                                        value={otp}
+                                        onChange={e => { setOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
+                                        placeholder="Enter 6-digit OTP"
+                                        required
+                                        maxLength={6}
+                                        disabled={loading}
+                                        style={{
+                                            paddingLeft: '38px',
+                                            fontFamily: "'Inter', sans-serif",
+                                            letterSpacing: otp ? '4px' : 'normal',
+                                            fontWeight: otp ? 'bold' : 'normal'
+                                        }} />
                                 </div>
                             </div>
 
                             <button type="submit" className="btn-brand"
                                 style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '12px', borderRadius: '12px', boxShadow: 'var(--clay-btn-shadow)' }}
                                 disabled={loading}>
-                                {loading ? <><Loader2 size={15} className="animate-spin" /> SENDING...</> : 'SEND RESET OTP →'}
+                                {loading ? <><Loader2 size={15} className="animate-spin" /> VERIFYING...</> : 'VERIFY OTP →'}
                             </button>
                         </form>
 
                         <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
                             <p style={{ fontSize: '13px', letterSpacing: '0.5px', fontFamily: "'Outfit', sans-serif", color: 'var(--text-muted)', fontWeight: '600' }}>
-                                REMEMBER IT?{' '}
-                                <Link to="/login" style={{ color: 'var(--yellow)', fontWeight: '700', textDecoration: 'none' }}>
-                                    SIGN IN
+                                BACK TO{' '}
+                                <Link to="/forgot-password" style={{ color: 'var(--yellow)', fontWeight: '700', textDecoration: 'none' }}>
+                                    EMAIL REQUEST
                                 </Link>
                             </p>
                         </div>
@@ -106,7 +129,7 @@ const ForgotPassword = () => {
                         letterSpacing: '1.5px', display: 'flex', justifyContent: 'space-between',
                         color: 'var(--text-muted)',
                     }}>
-                        <span>SECURE RESET</span><span>🔐</span>
+                        <span>SECURE VERIFY</span><span>🔑</span>
                     </div>
                 </div>
             </div>
@@ -114,5 +137,4 @@ const ForgotPassword = () => {
     );
 };
 
-export default ForgotPassword;
-
+export default VerifyResetOtp;

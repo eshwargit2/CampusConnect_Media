@@ -17,6 +17,11 @@ const loginAttempts = new Map();
 // Value: { username: string, passwordHash: string, bio: string, otp: string, expiresAt: number }
 const pendingRegistrations = new Map();
 
+// In-memory store for pending password resets (expires in 10 minutes)
+// Key: email (lowercased)
+// Value: { otp: string, expiresAt: number }
+const pendingResets = new Map();
+
 function checkLoginLock(email) {
     const emailKey = email.toLowerCase().trim();
     const record = loginAttempts.get(emailKey);
@@ -63,7 +68,7 @@ async function sendEmail({ to, subject, html }) {
     });
 }
 
-function resetEmailHtml(username, resetLink) {
+function resetOtpEmailHtml(username, otp) {
     return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0a0a0a;">
       <div style="background:#FFE000;padding:24px 32px;border-bottom:5px solid #0a0a0a;">
@@ -77,13 +82,13 @@ function resetEmailHtml(username, resetLink) {
           Hi <strong style="color:#FFE000;">${username}</strong>,
         </p>
         <p style="font-size:14px;line-height:1.7;margin:0 0 24px;color:#ccc;">
-          We received a request to reset your password. Click the button below to set a new one:
+          We received a request to reset your password. Please use the following One-Time Password (OTP) to verify your identity and reset your password:
         </p>
-        <a href="${resetLink}" style="display:inline-block;background:#FFE000;color:#0a0a0a;padding:14px 28px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;border:3px solid #FFE000;">
-          RESET PASSWORD →
-        </a>
+        <div style="background:#1a1a1a;padding:20px;text-align:center;border:2px dashed #FFE000;margin-bottom:24px;">
+          <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#FFE000;font-family:'Courier New',monospace;">${otp}</span>
+        </div>
         <p style="font-size:12px;line-height:1.7;margin:24px 0 0;color:#888;">
-          This link expires in <strong>1 hour</strong>. If you didn't request this, ignore this email.
+          This OTP is valid for <strong>10 minutes</strong>. If you didn't request this, ignore this email.
         </p>
       </div>
       <div style="background:#FFE000;padding:12px 32px;text-align:center;">
@@ -369,60 +374,83 @@ router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
 
     const { data: ourUser } = await supabase
         .from('users').select('id, username').eq('email', normalizedEmail).single();
 
-    if (!ourUser)
-        return res.json({ message: 'If that email is registered, a reset link has been sent.' });
-
-    const { error: createErr } = await supabase.auth.admin.createUser({
-        email: normalizedEmail,
-        email_confirm: true,
-        password: crypto.randomBytes(32).toString('hex'),
-    });
-
-    if (createErr && !createErr.message?.includes('already been registered')) {
-        console.error('Auth provision error:', createErr.message);
-        return res.status(500).json({ error: 'Failed to initiate reset. Try again.' });
+    if (!ourUser) {
+        // Return success response to prevent email enumeration
+        return res.json({ message: 'If that email is registered, a password reset OTP has been sent.' });
     }
 
-    const origin = (req.headers.origin || FRONTEND_URL).replace(/\/$/, '');
-    const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-        type: 'recovery',
-        email: normalizedEmail,
-        options: { redirectTo: `${origin}/reset-password` },
+    // Generate 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    pendingResets.set(normalizedEmail, {
+        otp,
+        expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
 
-    if (linkErr || !linkData?.properties?.action_link) {
-        console.error('generateLink error:', linkErr?.message);
-        return res.status(500).json({ error: 'Could not generate reset link. Try again.' });
-    }
-
-    const resetLink = linkData.properties.action_link;
-    console.log(`🔑 Reset link generated for ${normalizedEmail}`);
+    console.log(`🔑 Reset OTP generated for ${normalizedEmail}: ${otp}`);
 
     try {
         await sendEmail({
             to: normalizedEmail,
             subject: '🔐 Reset Your CampusConnect Password',
-            html: resetEmailHtml(ourUser.username, resetLink),
+            html: resetOtpEmailHtml(ourUser.username, otp),
         });
         console.log(`📧 Reset email sent to: ${normalizedEmail}`);
-        res.json({ message: 'Password reset email sent! Check your inbox (and spam folder).' });
+        res.json({ message: 'Password reset OTP sent! Check your inbox.' });
     } catch (mailErr) {
         console.error('Email send error:', mailErr.message);
         res.status(500).json({ error: 'Could not send email. Please try again later.' });
     }
 });
 
+// ─── VERIFY RESET OTP ────────────────────────────────────────────────────
+router.post('/verify-reset-otp', async (req, res) => {
+    const { email, otp } = req.body;
+    if (!email || !otp)
+        return res.status(400).json({ error: 'Email and OTP are required' });
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const pending = pendingResets.get(normalizedEmail);
+
+    if (!pending)
+        return res.status(400).json({ error: 'No password reset request found. Please request a new OTP.' });
+
+    if (pending.expiresAt < Date.now()) {
+        pendingResets.delete(normalizedEmail);
+        return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    if (pending.otp !== otp.trim())
+        return res.status(400).json({ error: 'Incorrect OTP. Please try again.' });
+
+    res.json({ message: 'OTP verified successfully.' });
+});
+
 // ─── RESET PASSWORD ───────────────────────────────────────────────────────
 router.post('/reset-password', async (req, res) => {
-    const { accessToken, newPassword } = req.body;
+    const { email, otp, newPassword } = req.body;
 
-    if (!accessToken || !newPassword)
-        return res.status(400).json({ error: 'Token and new password are required' });
+    if (!email || !otp || !newPassword)
+        return res.status(400).json({ error: 'Email, OTP, and new password are required' });
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const pending = pendingResets.get(normalizedEmail);
+
+    if (!pending)
+        return res.status(400).json({ error: 'No password reset request found. Please request a new OTP.' });
+
+    if (pending.expiresAt < Date.now()) {
+        pendingResets.delete(normalizedEmail);
+        return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    if (pending.otp !== otp.trim())
+        return res.status(400).json({ error: 'Incorrect OTP. Please try again.' });
 
     const hasMinLength = newPassword.length >= 8;
     const hasUppercase = /[A-Z]/.test(newPassword);
@@ -437,31 +465,21 @@ router.post('/reset-password', async (req, res) => {
     }
 
     try {
-        const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser(accessToken);
-
-        if (authErr || !authUser?.email)
-            return res.status(400).json({ error: 'Invalid or expired reset link. Please request a new one.' });
-
-        const { error: updateAuthErr } = await supabase.auth.admin.updateUserById(authUser.id, {
-            password: newPassword,
-        });
-        if (updateAuthErr) {
-            console.error('Supabase auth password update error:', updateAuthErr.message);
-            return res.status(500).json({ error: 'Failed to reset password.' });
-        }
-
         const newHash = await bcrypt.hash(newPassword, 12);
         const { error: dbErr } = await supabase
             .from('users')
             .update({ password_hash: newHash })
-            .eq('email', authUser.email.toLowerCase());
+            .eq('email', normalizedEmail);
 
         if (dbErr) {
             console.error('DB password update error:', dbErr.message);
-            return res.status(500).json({ error: 'Password updated in auth but failed to sync. Contact support.' });
+            return res.status(500).json({ error: 'Failed to update password. Try again.' });
         }
 
-        console.log(`🔐 Password reset successful for: ${authUser.email}`);
+        // Clean up pending reset OTP
+        pendingResets.delete(normalizedEmail);
+
+        console.log(`🔐 Password reset successful for: ${normalizedEmail}`);
         res.json({ message: 'Password reset successfully! You can now login.' });
     } catch (err) {
         console.error('Reset password error:', err);
